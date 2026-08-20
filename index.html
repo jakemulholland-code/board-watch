@@ -302,6 +302,7 @@
   <span class="topbar-label">Board Watch</span>
   <div class="topbar-dot"></div>
   <button class="btn ghost" id="activityBtn">Activity log</button>
+  <a class="btn ghost" href="/management">Management view</a>
   <button class="btn ghost" id="manageBtn">Manage boards</button>
   <button class="btn primary" id="syncBtn">Refresh from Monday</button>
 </header>
@@ -509,8 +510,10 @@
       <p class="hint"><b>Due date</b> and <b>Status</b> are required for overdue tracking. <b>Owner / Person</b>
         can be set on <b>more than one column</b> — if a board has separate Assignor and Assignee
         columns, mark both and everyone is pooled, so filtering to a person finds every task they're
-        on. <b>Department</b> is optional and powers the department filter. Task name is used for the
-        title unless you map one to Title.</p>
+        on. <b>Department</b> is optional and powers the department filter. <b>Hours</b> is optional and
+        feeds the Management view's capacity chart. <b>Completed date</b> is optional too — map it if the board
+        tracks when a task actually finished, and the Management view can tell on-time delivery apart from late
+        instead of only "done or not". Task name is used for the title unless you map one to Title.</p>
 
       <div class="map-mode">
         <div class="seg" id="mapModeSeg">
@@ -518,8 +521,9 @@
           <button type="button" class="seg-btn" data-mode="custom" id="modeCustomBtn">Custom</button>
         </div>
         <span class="hint" style="margin:0">Default guesses roles from column names (Assignee/Assignor/Person/Owner
-          → Owner / Person, Due Date → Due date, Status → Status, Name → Title, Department → Department). Change any
-          row below and it switches to Custom automatically — everything else stays as it was.</span>
+          → Owner / Person, Due Date → Due date, Status → Status, Name → Title, Department → Department,
+          Hours → Hours, Completed Date → Completed date). Change any row below and it switches to Custom
+          automatically — everything else stays as it was.</span>
       </div>
 
       <div id="mapPreview" class="map-preview"></div>
@@ -720,12 +724,13 @@ let detailMentions = [];          // [{id,name}] assignees available to tag
 
 const ROLE_OPTS = [
   ['ignore','— ignore —'],['title','Title'],['person','Owner / Person'],
-  ['due_date','Due date'],['status','Status'],['department','Department']
+  ['due_date','Due date'],['status','Status'],['department','Department'],['hours','Hours'],
+  ['completed_date','Completed date']
 ];
 // "person" may be on several columns (Assignor + Assignee both count); every
 // other role is single-column and flagged if two columns claim it.
 const MULTI_ROLES = ['person'];
-const UNIQUE_ROLES = ['title','due_date','status','department'];
+const UNIQUE_ROLES = ['title','due_date','status','department','hours','completed_date'];
 const avatarColor = name => {
   let h=0; for(const c of name) h=(h*31+c.charCodeAt(0))%360;
   return `hsl(${h} 55% 62%)`;
@@ -1306,7 +1311,7 @@ function setMapMode(mode){
 
 const ROLE_LABELS = [
   ['title','Title'],['person','Owner / Person'],['due_date','Due date'],
-  ['status','Status'],['department','Department'],
+  ['status','Status'],['department','Department'],['hours','Hours'],['completed_date','Completed date'],
 ];
 
 // Shared by the single-board mapping preview and the bulk-add preview:
@@ -1407,7 +1412,7 @@ $('#saveMapBtn').onclick=()=> withBusy($('#saveMapBtn'),'Saving…', async ()=>{
     if(seen.has(v)) dupes.push(v); else seen.add(v);
   });
   if(dupes.length){
-    const names={title:'Title',due_date:'Due date',status:'Status',department:'Department'};
+    const names={title:'Title',due_date:'Due date',status:'Status',department:'Department',hours:'Hours',completed_date:'Completed date'};
     const list=[...new Set(dupes)].map(d=>names[d]||d).join(', ');
     showMsg('mapMsg',`Two columns are both set to: ${list}. That role can only be on one column — change one of them. (Owner / Person is the exception — you can map several.)`,'err');
     return;
@@ -1477,6 +1482,13 @@ async function boot(){
     return;
   }
   await load();
+  // Lets other pages (e.g. Management view) deep-link straight to a task's
+  // detail modal via ?openTask=<id> instead of duplicating it themselves.
+  const openTaskId = new URLSearchParams(location.search).get('openTask');
+  if(openTaskId){
+    openDetail(openTaskId);
+    history.replaceState(null, '', location.pathname);
+  }
 }
 boot();
 </script>

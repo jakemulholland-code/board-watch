@@ -258,6 +258,7 @@
   .cap-seg{width:100%;flex:none}
   .cap-labels{margin-top:.5rem}
   .cap-wk-label{font-size:.62rem;color:var(--muted2);white-space:nowrap}
+  .cap-overdue-note{color:var(--red);font-weight:700;font-size:.6rem;white-space:nowrap}
   .cap-empty{color:var(--muted2);font-style:italic;font-size:.85rem;padding:1.5rem 0;text-align:center}
 
   /* ---- sync progress ---- */
@@ -1543,7 +1544,7 @@ function mondayOf(dateStr){
   return d;
 }
 const addDays = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
-const fmtWeekLabel = d => d.toLocaleDateString(undefined,{day:'numeric',month:'short'});
+const fmtWeekLabel = d => 'w/c '+d.toLocaleDateString(undefined,{day:'numeric',month:'short'});
 
 function loadStatusClass(ratio){
   if(ratio>1) return 'cap-over';
@@ -1556,10 +1557,16 @@ function loadStatusClass(ratio){
 // week 0 (this week) rather than being dropped, since they still need doing.
 function computeCapacity(peopleNames, weeksCount){
   const wk0 = mondayOf(STATE.today);
+  const todayDate = new Date(STATE.today+'T00:00:00');
   const weeks = [];
   for(let i=0;i<weeksCount;i++) weeks.push(addDays(wk0, i*7));
   const perPerson = {};
-  peopleNames.forEach(p=> perPerson[p] = weeks.map(()=>({total:0, byBoard:{}})) );
+  // overdueHours/overdueCount are always 0 outside week 0 — only a task due
+  // before this week even gets clamped into a bucket at all, and clamping
+  // always lands it in week 0.
+  peopleNames.forEach(p=> perPerson[p] = weeks.map(()=>(
+    {total:0, byBoard:{}, overdueHours:0, overdueCount:0, dueHours:0, dueCount:0}
+  )) );
   const boardsUsed = new Set();
   let excludedNoHours=0, excludedNoDate=0, excludedBeyond=0;
 
@@ -1574,11 +1581,14 @@ function computeCapacity(peopleNames, weeksCount){
     let idx = Math.floor((due-wk0)/(7*86400000));
     if(idx<0) idx=0;
     if(idx>=weeksCount){ excludedBeyond++; return; }
+    const isOverdue = due < todayDate;
     matched.forEach(n=>{
       const bucket = perPerson[n][idx];
       bucket.total += t.hours;
       bucket.byBoard[t.board_name] = (bucket.byBoard[t.board_name]||0) + t.hours;
       boardsUsed.add(t.board_name);
+      if(isOverdue){ bucket.overdueHours += t.hours; bucket.overdueCount++; }
+      else { bucket.dueHours += t.hours; bucket.dueCount++; }
     });
   });
   return {weeks, perPerson, boardsUsed, excludedNoHours, excludedNoDate, excludedBeyond};
@@ -1632,10 +1642,19 @@ function renderCapacityView(){
         segs = `<div class="cap-seg" style="height:${Math.round(b.total/scaleMax*CAP_CHART_H)}px;background:${loadColorVar[cls]}"></div>`;
       }
       const boardBits = Object.entries(b.byBoard).sort((a,z)=>z[1]-a[1]).map(([bn,h])=>`${bn}: ${h.toFixed(1)}h`).join(', ');
-      const tip = `${fmtWeekLabel(weeks[i])} — ${b.total.toFixed(1)}h${boardBits?' ('+boardBits+')':''}`;
+      const overdueBit = b.overdueCount
+        ? ` — of that, ${b.overdueCount} overdue (${b.overdueHours.toFixed(1)}h) vs ${b.dueCount} actually due this week (${b.dueHours.toFixed(1)}h)`
+        : '';
+      const tip = `${fmtWeekLabel(weeks[i])} — ${b.total.toFixed(1)}h${boardBits?' ('+boardBits+')':''}${overdueBit}`;
       return `<div class="cap-col" title="${esc(tip)}"><div class="cap-bar-track" style="height:${CAP_CHART_H}px">${segs}</div></div>`;
     }).join('');
-    const labels = weeks.map(w=>`<div class="cap-wk-label">${fmtWeekLabel(w)}</div>`).join('');
+    const labels = weeks.map((w,i)=>{
+      const b = buckets[i];
+      const overdueNote = b.overdueCount
+        ? `<br><span class="cap-overdue-note">${b.overdueCount} overdue (${b.overdueHours.toFixed(1)}h)</span>`
+        : '';
+      return `<div class="cap-wk-label">${fmtWeekLabel(w)}${overdueNote}</div>`;
+    }).join('');
     return `<div class="cap-person">
       <div class="cap-person-head">
         <div class="cap-person-name"><span class="avatar" style="background:${avatarColor(p)}">${initials(p)}</span>${esc(p)}</div>

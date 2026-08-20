@@ -75,7 +75,11 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 cfg = ms.load_config()
                 board = ms.fetch_board_columns(cfg, bid)
-                # No auto-guessing — the user maps every column themselves.
+                # "suggested_mapping" is the Default preset guessed from column
+                # titles (see monday_sync.guess_mapping). The browser applies it
+                # when the Default toggle is on; the user can switch to Custom
+                # any time, and whatever they end up with is what gets saved.
+                board["suggested_mapping"] = ms.guess_mapping(board["columns"])
                 return self._send(200, board)
             except SystemExit as e:
                 return self._send(400, {"error": str(e)})
@@ -111,6 +115,7 @@ class Handler(BaseHTTPRequestHandler):
                     "name": body.get("name", bid),
                     "columns": body.get("columns", []),
                     "mapping": body.get("mapping", {}),
+                    "mapping_mode": body.get("mapping_mode") or "custom",
                     "done_labels": [d.strip().lower() for d in body.get("done_labels", ["done"]) if d.strip()],
                 }
                 ms.save_json(ms.BOARDS_FILE, store)

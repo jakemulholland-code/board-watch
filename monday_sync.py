@@ -44,6 +44,50 @@ API_VERSION = "2025-07"
 ROLES = ["title", "person", "due_date", "status", "department", "ignore"]
 MULTI_ROLES = ["person"]
 
+# Keyword hints used to build the "default" mapping preset from column titles,
+# so a new board starts pre-filled from common Monday naming conventions
+# instead of every column starting on "ignore". This is only ever a starting
+# point — whatever ends up in boards.json (default or hand-edited) is what's
+# actually used. Checked in this order so e.g. "Assignee Name" matches person
+# before it could match title on "name".
+DEFAULT_ROLE_ORDER = ["person", "due_date", "status", "department", "title"]
+DEFAULT_ROLE_KEYWORDS = {
+    "person": ["assignee", "assignor", "person", "people", "owner"],
+    "due_date": ["due date", "due"],
+    "status": ["status"],
+    "department": ["department"],
+    "title": ["name", "title"],
+}
+
+
+def guess_role(col_title):
+    """Best-effort role guess for a column title, used to build the "default"
+    mapping preset. Returns a role from ROLES, or "ignore" if nothing matches."""
+    t = (col_title or "").strip().lower()
+    for role in DEFAULT_ROLE_ORDER:
+        if any(kw in t for kw in DEFAULT_ROLE_KEYWORDS[role]):
+            return role
+    return "ignore"
+
+
+def guess_mapping(columns):
+    """Build the "default" mapping preset for a board's columns. Unique roles
+    only take their first matching column (a later match is left unmapped,
+    same as a duplicate would be rejected in manual mode); "person" pools
+    every matching column, same as the multi-column rule for manual mapping."""
+    mapping = {}
+    for c in columns:
+        role = guess_role(c.get("title", ""))
+        if role == "ignore":
+            continue
+        if role in MULTI_ROLES:
+            mapping.setdefault(role, [])
+            if c["id"] not in mapping[role]:
+                mapping[role].append(c["id"])
+        elif role not in mapping:
+            mapping[role] = c["id"]
+    return mapping
+
 
 # --------------------------------------------------------------------------
 # small json helpers
@@ -327,15 +371,16 @@ def interactive_map(board):
     cols = board["columns"]
     print(f"\nMapping columns for board: {board['name']} ({board['id']})")
     print("Roles: title | person | due_date | status | department | ignore")
-    print("(Press Enter to leave a column unmapped. Title defaults to the item")
-    print(" name. 'person' may be used on several columns — e.g. Assignor and")
+    print("(Press Enter to accept the suggested default shown for each column.")
+    print(" 'person' may be used on several columns — e.g. Assignor and")
     print(" Assignee — and all are pooled together.)\n")
     mapping = {}
     done_labels = None
     for c in cols:
-        prompt = f"  [{c['type']:>16}] {c['title']}  -> role (default: ignore): "
+        guess = guess_role(c["title"])
+        prompt = f"  [{c['type']:>16}] {c['title']}  -> role (default: {guess}): "
         ans = input(prompt).strip().lower()
-        role = ans if ans in ROLES else "ignore"
+        role = ans if ans in ROLES else guess
         if role in MULTI_ROLES:
             mapping.setdefault(role, [])
             if c["id"] not in mapping[role]:

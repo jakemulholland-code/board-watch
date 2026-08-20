@@ -1,0 +1,6 @@
+# Board Watch runs on the Python 3.8+ standard library alone.
+# There are no required third-party packages — the API calls use urllib and
+# the dashboard is served by http.server, both built in.
+#
+# This file exists so `pip install -r requirements.txt` is a safe no-op and so
+# future optional extras have a home. Nothing is installed by default.

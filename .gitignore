@@ -1,0 +1,17 @@
+# Secrets & personal config — never commit these
+.env
+config.json
+data/boards.json
+data/tasks.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/

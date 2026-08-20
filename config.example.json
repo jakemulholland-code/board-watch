@@ -1,0 +1,8 @@
+{
+  "api_url": "https://api.monday.com/v2",
+  "api_version": "2025-07",
+  "warning_days": 3,
+  "lookback_months": 4,
+  "excluded_departments": ["PPC", "Paid Social"],
+  "monday_account": "paramount-digital-ltd"
+}

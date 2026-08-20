@@ -1,0 +1,21 @@
+{
+  "boards": {
+    "1234567890": {
+      "id": "1234567890",
+      "name": "Example Board",
+      "columns": [
+        { "id": "name", "title": "Task", "type": "name" },
+        { "id": "person", "title": "Owner", "type": "people" },
+        { "id": "date4", "title": "Due Date", "type": "date" },
+        { "id": "status", "title": "Status", "type": "status" }
+      ],
+      "mapping": {
+        "title": "name",
+        "person": ["person"],
+        "due_date": "date4",
+        "status": "status"
+      },
+      "done_labels": ["done"]
+    }
+  }
+}

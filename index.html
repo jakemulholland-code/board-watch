@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Board Watch · Paramount Digital</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%3Cg%20transform%3D%22translate%280%2C0%29%20scale%280.82%29%22%3E%3Cpath%20class%3D%22logo-tile%20tile-1%22%20d%3D%22M2.14973%2024.2673H7.69928C8.82722%2024.2673%209.74163%2025.1829%209.74163%2026.3124V31.9093C9.74163%2033.0388%208.82722%2033.9544%207.69928%2033.9544H2.14973C1.0218%2033.9544%200.107422%2033.0388%200.107422%2031.9093V26.3124C0.107422%2025.1829%201.0218%2024.2673%202.14973%2024.2673Z%22%20fill%3D%22%2301C6A3%22%20%20%3E%3C/path%3E%3Cpath%20class%3D%22logo-tile%20tile-2%22%20d%3D%22M19.728%2036.3229H14.1786C13.0506%2036.3229%2012.1362%2037.2385%2012.1362%2038.368V43.9653C12.1362%2045.0948%2013.0506%2046.0105%2014.1786%2046.0105H19.728C20.856%2046.0105%2021.7704%2045.0948%2021.7704%2043.9653V38.368C21.7704%2037.2385%2020.856%2036.3229%2019.728%2036.3229Z%22%20fill%3D%22%23008475%22%20%20%3E%3C/path%3E%3Cpath%20class%3D%22logo-tile%20tile-3%22%20d%3D%22M19.728%2024.2672H14.1786C13.0506%2024.2672%2012.1362%2025.1829%2012.1362%2026.3124V31.9096C12.1362%2033.0392%2013.0506%2033.9548%2014.1786%2033.9548H19.728C20.856%2033.9548%2021.7704%2033.0392%2021.7704%2031.9096V26.3124C21.7704%2025.1829%2020.856%2024.2672%2019.728%2024.2672Z%22%20fill%3D%22%2301C6A3%22%20%20%3E%3C/path%3E%3Cpath%20class%3D%22logo-tile%20tile-4%22%20d%3D%22M19.728%2012.2115H14.1786C13.0506%2012.2115%2012.1362%2013.1271%2012.1362%2014.2567V19.8539C12.1362%2020.9834%2013.0506%2021.8991%2014.1786%2021.8991H19.728C20.856%2021.8991%2021.7704%2020.9834%2021.7704%2019.8539V14.2567C21.7704%2013.1271%2020.856%2012.2115%2019.728%2012.2115Z%22%20fill%3D%22%23E8A828%22%20%20%3E%3C/path%3E%3Cpath%20class%3D%22logo-tile%20tile-5%22%20d%3D%22M31.7183%200.155762H26.1688C25.0409%200.155762%2024.1265%201.07142%2024.1265%202.20093V7.7982C24.1265%208.92771%2025.0409%209.84337%2026.1688%209.84337H31.7183C32.8462%209.84337%2033.7606%208.92771%2033.7606%207.7982V2.20093C33.7606%201.07142%2032.8462%200.155762%2031.7183%200.155762Z%22%20fill%3D%22%23DA1A50%22%20%20%3E%3C/path%3E%3Cpath%20class%3D%22logo-tile%20tile-6%22%20d%3D%22M31.7183%2012.2115H26.1688C25.0409%2012.2115%2024.1265%2013.1271%2024.1265%2014.2567V19.8539C24.1265%2020.9834%2025.0409%2021.8991%2026.1688%2021.8991H31.7183C32.8462%2021.8991%2033.7606%2020.9834%2033.7606%2019.8539V14.2567C33.7606%2013.1271%2032.8462%2012.2115%2031.7183%2012.2115Z%22%20fill%3D%22%23E8A828%22%20%20%3E%3C/path%3E%3Cpath%20class%3D%22logo-tile%20tile-7%22%20d%3D%22M31.7183%2024.2672H26.1688C25.0409%2024.2672%2024.1265%2025.1829%2024.1265%2026.3124V31.9096C24.1265%2033.0392%2025.0409%2033.9548%2026.1688%2033.9548H31.7183C32.8462%2033.9548%2033.7606%2033.0392%2033.7606%2031.9096V26.3124C33.7606%2025.1829%2032.8462%2024.2672%2031.7183%2024.2672Z%22%20fill%3D%22%2301C6A3%22%20%20%3E%3C/path%3E%3Cpath%20class%3D%22logo-tile%20tile-8%22%20d%3D%22M31.7183%2036.3229H26.1688C25.0409%2036.3229%2024.1265%2037.2385%2024.1265%2038.368V43.9653C24.1265%2045.0948%2025.0409%2046.0105%2026.1688%2046.0105H31.7183C32.8462%2046.0105%2033.7606%2045.0948%2033.7606%2043.9653V38.368C33.7606%2037.2385%2032.8462%2036.3229%2031.7183%2036.3229Z%22%20fill%3D%22%23008475%22%20%20%3E%3C/path%3E%3C/g%3E%0A%3Cg%20transform%3D%22translate%2834%2C32%29%22%3E%0A%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%2230%22%20height%3D%2230%22%20rx%3D%228%22%20fill%3D%22%2316181d%22/%3E%0A%3Ctext%20x%3D%2215%22%20y%3D%2222.5%22%20font-family%3D%22Georgia%2C%27Fraunces%27%2Cserif%22%20font-weight%3D%22700%22%20font-size%3D%2221%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%3EM%3C/text%3E%0A%3C/g%3E%0A%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Paramount Digital brand — light/editorial */
+    --bg:#ffffff; --surface:#ffffff; --surface2:#f6f7f8; --surface3:#fbfbfc;
+    --ink:#1a1a1a; --text:#2a2a2a; --muted:#6a6a6a; --muted2:#a3a3a3;
+    --line:#ededed; --line2:#dedede;
+    --teal:#01C6A3; --teal-dark:#008475; --amber:#E8A828; --red:#DA1A50;
+    /* semantic (mapped onto brand palette) */
+    --overdue:#DA1A50; --overdue-bg:#fdeef2;
+    --warning:#B47A00; --warning-bg:#fbf3e0;
+    --ok:#008475; --ok-bg:#e7f8f4;
+    --done:#a3a3a3; --done-bg:#f4f4f5;
+    --accent:#008475;
+    --faint:#a3a3a3;
+    --mono:'Sora',ui-monospace,Menlo,monospace;
+    --sans:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --serif:'Fraunces',Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:300;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  button{font-family:inherit;cursor:pointer}
+  h1,h2,h3{margin:0;font-weight:700}
+
+  /* ---- topbar ---- */
+  header.topbar{background:#fff;border-bottom:1px solid var(--line);padding:0 2.5rem;height:74px;
+    display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:200;}
+  .topbar-logo{display:flex;align-items:center;color:var(--ink);}
+  .topbar-logo .paramount-logo{height:30px;width:auto;display:block;}
+  .stamp{font-size:.64rem;color:var(--muted2);letter-spacing:.02em;max-width:38ch;line-height:1.35;
+    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .spacer{flex:1}
+  .topbar-label{font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--teal-dark);font-weight:600;}
+  .topbar-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.6);}}
+  .btn{background:#fff;border:1px solid var(--line2);color:var(--muted);
+    padding:.58rem 1.1rem;border-radius:9px;font-size:.7rem;font-weight:600;letter-spacing:.05em;
+    text-transform:uppercase;transition:border-color .14s,color .14s}
+  .btn:hover{border-color:var(--teal);color:var(--teal-dark)}
+  .btn.primary{background:var(--teal-dark);border-color:var(--teal-dark);color:#fff}
+  .btn.primary:hover{background:var(--teal);border-color:var(--teal);color:#fff}
+  .btn.ghost{background:#fff}
+
+  /* ---- hero ---- */
+  .hero{position:relative;overflow:hidden;padding:2.8rem 2.5rem 2.4rem;border-bottom:1px solid var(--line);background:var(--surface3);}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 60% at 100% 0%,rgba(1,198,163,.10) 0%,transparent 55%),radial-gradient(ellipse 40% 50% at 0% 100%,rgba(232,168,40,.07) 0%,transparent 55%);pointer-events:none;}
+  .hero-inner{max-width:1240px;margin:0 auto;position:relative;}
+  .hero-kicker{display:inline-flex;align-items:center;gap:.6rem;font-size:.64rem;letter-spacing:.22em;text-transform:uppercase;color:var(--teal-dark);font-weight:600;margin-bottom:.9rem;}
+  .hero-kicker::before{content:'';display:block;width:26px;height:2px;background:var(--teal);border-radius:2px;}
+  .hero-title{font-family:var(--serif);font-size:clamp(2rem,4.4vw,3.2rem);font-weight:900;line-height:1.02;letter-spacing:-.025em;color:var(--ink);margin-bottom:.7rem;}
+  .hero-title .accent{color:var(--teal-dark);font-style:italic;}
+  .hero-sub{color:var(--muted);font-size:.92rem;max-width:620px;line-height:1.8;font-weight:400;}
+
+  .page{max-width:1240px;margin:0 auto;padding:2rem 2.5rem 4rem;}
+
+  /* ---- error banner ---- */
+  #errBanner{margin:0 0 1.4rem;padding:.85rem 1.1rem;border-radius:10px;font-size:.78rem;
+    background:var(--overdue-bg);color:var(--red);border:1px solid rgba(218,26,80,.25);line-height:1.55;font-weight:400}
+
+  /* ---- summary stats ---- */
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.7rem;}
+  .stat{position:relative;background:#fff;border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.4rem;
+    border-top:3px solid var(--teal);box-shadow:0 1px 2px rgba(16,24,40,.03);overflow:hidden}
+  .stat .bar{display:none}
+  .stat .n{font-family:var(--serif);font-size:2rem;font-weight:700;line-height:1;color:var(--ink);letter-spacing:-.01em}
+  .stat .l{font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-top:.5rem;font-weight:600}
+  .stat.overdue{border-top-color:var(--red)} .stat.overdue .n{color:var(--red)}
+  .stat.warning{border-top-color:var(--amber)} .stat.warning .n{color:var(--amber)}
+  .stat.ok{border-top-color:var(--teal)} .stat.ok .n{color:var(--teal-dark)}
+  .stat.total{border-top-color:var(--ink)}
+
+  /* ---- filters ---- */
+  .filters{display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:1.3rem;}
+  .field{display:flex;flex-direction:column;gap:.4rem}
+  .field label{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.13em;font-weight:600;padding-left:.1rem}
+  select,input[type=text],input[type=date]{
+    background:#fff;border:1px solid var(--line2);color:var(--text);font-family:var(--sans);
+    padding:.55rem .8rem;border-radius:9px;font-size:.8rem;font-weight:400;min-width:150px;transition:border-color .14s}
+  select{appearance:none;padding-right:2rem;color:var(--muted);font-weight:500;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%23a3a3a3' stroke-width='1.4' fill='none'/></svg>");
+    background-repeat:no-repeat;background-position:right .8rem center;}
+  select:focus,input:focus{outline:none;border-color:var(--teal);color:var(--ink)}
+  input::placeholder{color:var(--muted2)}
+  .chk{display:flex;align-items:center;gap:.5rem;color:var(--muted);font-size:.8rem;
+    padding-bottom:.55rem;cursor:pointer;user-select:none;font-weight:400}
+  .chk input{accent-color:var(--teal-dark);width:15px;height:15px}
+
+  /* status multiselect */
+  .multi{position:relative}
+  .multi-btn{background:#fff;border:1px solid var(--line2);color:var(--muted);
+    padding:.55rem 1.8rem .55rem .8rem;border-radius:9px;font-size:.8rem;font-weight:500;min-width:150px;text-align:left;
+    position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:border-color .14s}
+  .multi-btn::after{content:"▾";position:absolute;right:.7rem;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:.7rem}
+  .multi-btn:hover{border-color:var(--teal);color:var(--ink)}
+  .multi-menu{display:none;position:absolute;z-index:120;top:calc(100% + 4px);left:0;min-width:220px;
+    max-height:300px;overflow:auto;background:#fff;border:1px solid var(--line2);
+    border-radius:12px;padding:6px;box-shadow:0 14px 34px rgba(16,24,40,.12)}
+  .multi-menu.open{display:block}
+  .multi-menu .mm-actions{display:flex;gap:6px;padding:4px 6px 8px;border-bottom:1px solid var(--line);margin-bottom:4px}
+  .multi-menu .mm-actions button{flex:1;background:var(--surface2);border:1px solid var(--line);
+    color:var(--muted);font-size:.62rem;padding:5px;border-radius:7px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+  .multi-menu .mm-actions button:hover{color:var(--teal-dark);border-color:var(--teal)}
+  .multi-opt{display:flex;align-items:center;gap:.55rem;padding:.5rem .55rem;border-radius:7px;
+    font-size:.8rem;cursor:pointer;user-select:none;font-weight:400}
+  .multi-opt:hover{background:var(--surface3)}
+  .multi-opt input{accent-color:var(--teal-dark);width:15px;height:15px;flex:none}
+  .multi-opt .swatch{width:9px;height:9px;border-radius:3px;flex:none}
+  .btn-secondary,#clearBtn{background:#fff;color:var(--muted);border:1px solid var(--line2);
+    padding:.55rem 1.1rem;border-radius:9px;font-size:.7rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    transition:border-color .14s,color .14s;align-self:flex-end}
+  #clearBtn:hover{border-color:var(--teal);color:var(--teal-dark)}
+
+  /* ---- table ---- */
+  .wrap{overflow:visible}
+  table{width:100%;border-collapse:collapse}
+  thead th{text-align:left;color:var(--muted);font-size:.58rem;text-transform:uppercase;
+    letter-spacing:.13em;font-weight:700;padding:.7rem .85rem;border-bottom:1px solid var(--line2);
+    cursor:pointer;white-space:nowrap;background:var(--surface3)}
+  thead th:first-child{border-top-left-radius:12px}
+  thead th:last-child{border-top-right-radius:12px}
+  thead th:hover{color:var(--teal-dark)}
+  tbody td{padding:.85rem .85rem;border-bottom:1px solid var(--line);vertical-align:middle;font-size:.82rem;font-weight:400}
+  tbody tr{transition:background .1s;background:#fff}
+  tbody tr:hover{background:var(--surface3)}
+  tr.overdue{background:var(--overdue-bg)}
+  tr.overdue:hover{background:#fbe3ea}
+  tr.warning{background:var(--warning-bg)}
+  tr.warning:hover{background:#f8ecd2}
+  tr.done td{color:var(--muted2)}
+  .title{font-weight:500;color:var(--ink)}
+  .flag{display:inline-flex;align-items:center;gap:.45rem;font-size:.62rem;font-weight:700;letter-spacing:.02em;
+    padding:.22rem .55rem;border-radius:20px;white-space:nowrap;text-transform:uppercase}
+  .flag .dot{width:7px;height:7px;border-radius:50%}
+  .flag.overdue{color:var(--red);background:var(--overdue-bg)} .flag.overdue .dot{background:var(--red)}
+  .flag.warning{color:var(--warning);background:var(--warning-bg)} .flag.warning .dot{background:var(--amber)}
+  .flag.ok{color:var(--teal-dark);background:var(--ok-bg)} .flag.ok .dot{background:var(--teal)}
+  .flag.done{color:var(--muted);background:var(--done-bg)} .flag.done .dot{background:var(--muted2)}
+  .flag.none{color:var(--muted2);background:var(--surface2)} .flag.none .dot{background:var(--muted2)}
+  .pill{font-size:.68rem;color:var(--muted);background:var(--surface2);border:1px solid var(--line);
+    padding:.1rem .5rem;border-radius:6px;white-space:nowrap;font-weight:500}
+  .status-pill{font-size:.68rem;font-weight:600;white-space:nowrap;padding:.18rem .55rem;border-radius:6px;
+    color:var(--sc);background:color-mix(in srgb, var(--sc) 14%, #fff);
+    border:1px solid color-mix(in srgb, var(--sc) 32%, #fff)}
+  .comment-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;font-weight:600;
+    color:var(--teal-dark);background:var(--ok-bg);border:1px solid rgba(1,198,163,.28);
+    padding:.16rem .5rem;border-radius:20px;cursor:default}
+  .comment-badge svg{flex:none;opacity:.85}
+  .comment-none{color:var(--muted2);font-size:.8rem}
+  .person{display:inline-flex;align-items:center;gap:.5rem}
+  .avatar{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+    font-size:.6rem;font-weight:700;color:#fff}
+  .empty{text-align:center;padding:3rem 1.5rem;color:var(--muted2);font-size:.88rem;font-style:italic}
+
+  /* ---- modal ---- */
+  .overlay{position:fixed;inset:0;background:rgba(20,24,30,.42);backdrop-filter:blur(3px);
+    display:none;align-items:flex-start;justify-content:center;padding:4rem 1.25rem;z-index:300;overflow:auto}
+  .overlay.open{display:flex}
+  .modal{background:#fff;border:1px solid var(--line);border-radius:16px;
+    width:100%;max-width:640px;box-shadow:0 24px 60px rgba(16,24,40,.22);overflow:hidden}
+  .modal header{position:static;background:var(--surface3);border-bottom:1px solid var(--line);padding:1.3rem 1.5rem;height:auto;display:block}
+  .modal h2{font-family:var(--serif);font-size:1.2rem;color:var(--ink);font-weight:700}
+  .modal .body{padding:1.4rem 1.5rem;max-height:60vh;overflow:auto}
+  .modal .foot{padding:1.1rem 1.5rem;border-top:1px solid var(--line);display:flex;gap:.6rem;justify-content:flex-end;background:var(--surface3)}
+  .detail-modal .foot{justify-content:space-between}
+  .detail-meta{display:flex;flex-wrap:wrap;gap:.4rem .6rem;margin-top:.6rem;font-size:.72rem;color:var(--muted)}
+  .detail-meta .pill{font-size:.68rem}
+  .detail-section{margin-bottom:1.6rem}
+  .detail-section:last-child{margin-bottom:0}
+  .detail-h3{font-family:var(--serif);font-size:.95rem;font-weight:700;color:var(--ink);
+    margin-bottom:.8rem;padding-bottom:.4rem;border-bottom:1px solid var(--line)}
+  .detail-count{font-family:var(--sans);font-size:.68rem;font-weight:600;color:var(--teal-dark);
+    background:var(--ok-bg);border:1px solid rgba(1,198,163,.28);padding:.05rem .45rem;border-radius:20px;margin-left:.3rem}
+  .detail-fields{display:grid;grid-template-columns:130px 1fr;gap:.55rem .9rem}
+  .detail-fields dt{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding-top:.1rem}
+  .detail-fields dd{margin:0;font-size:.84rem;color:var(--text);font-weight:400;word-break:break-word}
+  .detail-updates{display:flex;flex-direction:column;gap:.8rem}
+  .update-card{background:var(--surface3);border:1px solid var(--line);border-radius:11px;padding:.85rem 1rem}
+  .update-card .u-head{display:flex;align-items:center;gap:.55rem;margin-bottom:.5rem}
+  .update-card .u-avatar{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:.58rem;font-weight:700;color:#fff;flex:none}
+  .update-card .u-author{font-size:.8rem;font-weight:600;color:var(--ink)}
+  .update-card .u-date{font-size:.68rem;color:var(--muted2);margin-left:auto}
+  .update-card .u-body{font-size:.82rem;color:var(--text);line-height:1.6;white-space:pre-wrap;font-weight:400}
+  .detail-empty{font-size:.82rem;color:var(--muted2);font-style:italic}
+  .compose-text{width:100%;background:var(--surface2);border:1px solid var(--line2);color:var(--text);
+    font-family:var(--sans);font-size:.84rem;font-weight:400;padding:.65rem .8rem;border-radius:9px;
+    outline:none;resize:vertical;line-height:1.55;transition:border-color .14s}
+  .compose-text:focus{border-color:var(--teal);background:#fff}
+  .compose-text::placeholder{color:var(--muted2)}
+  .compose-row{display:flex;align-items:center;gap:.7rem;margin-top:.7rem}
+  .compose-row .chk{padding-bottom:0}
+  tbody tr{cursor:pointer}
+  .map-row{display:grid;grid-template-columns:1fr 155px;gap:.7rem;align-items:center;
+    padding:.6rem 0;border-bottom:1px solid var(--line)}
+  .map-row .cname{font-size:.82rem;color:var(--ink);font-weight:400}
+  .map-row .ctype{color:var(--muted2);font-size:.62rem;letter-spacing:.03em}
+  .hint{color:var(--muted);font-size:.8rem;margin:0 0 1rem;line-height:1.7;font-weight:400}
+  .hint b{color:var(--text);font-weight:600}
+  .tracked-item{display:flex;align-items:center;justify-content:space-between;
+    padding:.7rem .9rem;background:var(--surface3);border:1px solid var(--line);border-radius:10px;margin-bottom:.5rem}
+  .tracked-item .meta{color:var(--muted2);font-size:.62rem;letter-spacing:.03em}
+  .link{color:var(--red);background:none;border:none;font-size:.72rem;padding:.25rem .4rem;font-weight:600}
+  .link:hover{text-decoration:underline}
+  .msg{font-size:.76rem;padding:.6rem .85rem;border-radius:9px;margin-top:.7rem;display:none;font-weight:400;line-height:1.5}
+  .msg.err{display:block;background:var(--overdue-bg);color:var(--red);border:1px solid rgba(218,26,80,.25)}
+  .msg.ok{display:block;background:var(--ok-bg);color:var(--teal-dark);border:1px solid rgba(1,198,163,.3)}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line2);
+    border-top-color:var(--teal-dark);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .field-label{display:block;font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.4rem}
+  input[type=password]{width:100%;background:var(--surface2);border:1px solid var(--line2);color:var(--text);
+    font-family:var(--sans);font-size:.84rem;padding:.6rem .85rem;border-radius:9px;outline:none;transition:border-color .14s}
+  input[type=password]:focus{border-color:var(--teal);background:#fff}
+  ol.hint{padding-left:1.1rem}
+  code{font-family:var(--mono);background:var(--surface2);padding:.05rem .3rem;border-radius:4px;font-size:.9em;color:var(--teal-dark)}
+
+  /* ---- footer ---- */
+  footer{border-top:1px solid var(--line);padding:1.8rem 2.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;max-width:1240px;margin:0 auto;}
+  .footer-left{display:flex;align-items:center;gap:.8rem;color:var(--muted2);}
+  .footer-left .paramount-logo{height:24px;width:auto;opacity:.55;}
+  .footer-text{font-size:.7rem;color:var(--muted2);letter-spacing:.03em;}
+
+  @media(max-width:780px){
+    .hero-title{font-size:2rem;}
+    .filters{flex-direction:column;align-items:stretch}
+    #clearBtn,.chk{align-self:flex-start}
+    thead th:nth-child(5),tbody td:nth-child(5),
+    thead th:nth-child(7),tbody td:nth-child(7){display:none}
+  }
+  @media(max-width:640px){
+    header.topbar{padding:0 1.25rem}.hero{padding:2rem 1.25rem}.page{padding:1.5rem}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-logo"><svg viewBox="0 0 139 47" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logo-title" class="paramount-logo"><title id="logo-title">Paramount Digital</title><g><path class="logo-tile tile-1" d="M2.14973 24.2673H7.69928C8.82722 24.2673 9.74163 25.1829 9.74163 26.3124V31.9093C9.74163 33.0388 8.82722 33.9544 7.69928 33.9544H2.14973C1.0218 33.9544 0.107422 33.0388 0.107422 31.9093V26.3124C0.107422 25.1829 1.0218 24.2673 2.14973 24.2673Z" fill="#01C6A3" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-2" d="M19.728 36.3229H14.1786C13.0506 36.3229 12.1362 37.2385 12.1362 38.368V43.9653C12.1362 45.0948 13.0506 46.0105 14.1786 46.0105H19.728C20.856 46.0105 21.7704 45.0948 21.7704 43.9653V38.368C21.7704 37.2385 20.856 36.3229 19.728 36.3229Z" fill="#008475" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-3" d="M19.728 24.2672H14.1786C13.0506 24.2672 12.1362 25.1829 12.1362 26.3124V31.9096C12.1362 33.0392 13.0506 33.9548 14.1786 33.9548H19.728C20.856 33.9548 21.7704 33.0392 21.7704 31.9096V26.3124C21.7704 25.1829 20.856 24.2672 19.728 24.2672Z" fill="#01C6A3" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-4" d="M19.728 12.2115H14.1786C13.0506 12.2115 12.1362 13.1271 12.1362 14.2567V19.8539C12.1362 20.9834 13.0506 21.8991 14.1786 21.8991H19.728C20.856 21.8991 21.7704 20.9834 21.7704 19.8539V14.2567C21.7704 13.1271 20.856 12.2115 19.728 12.2115Z" fill="#E8A828" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-5" d="M31.7183 0.155762H26.1688C25.0409 0.155762 24.1265 1.07142 24.1265 2.20093V7.7982C24.1265 8.92771 25.0409 9.84337 26.1688 9.84337H31.7183C32.8462 9.84337 33.7606 8.92771 33.7606 7.7982V2.20093C33.7606 1.07142 32.8462 0.155762 31.7183 0.155762Z" fill="#DA1A50" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-6" d="M31.7183 12.2115H26.1688C25.0409 12.2115 24.1265 13.1271 24.1265 14.2567V19.8539C24.1265 20.9834 25.0409 21.8991 26.1688 21.8991H31.7183C32.8462 21.8991 33.7606 20.9834 33.7606 19.8539V14.2567C33.7606 13.1271 32.8462 12.2115 31.7183 12.2115Z" fill="#E8A828" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-7" d="M31.7183 24.2672H26.1688C25.0409 24.2672 24.1265 25.1829 24.1265 26.3124V31.9096C24.1265 33.0392 25.0409 33.9548 26.1688 33.9548H31.7183C32.8462 33.9548 33.7606 33.0392 33.7606 31.9096V26.3124C33.7606 25.1829 32.8462 24.2672 31.7183 24.2672Z" fill="#01C6A3" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-8" d="M31.7183 36.3229H26.1688C25.0409 36.3229 24.1265 37.2385 24.1265 38.368V43.9653C24.1265 45.0948 25.0409 46.0105 26.1688 46.0105H31.7183C32.8462 46.0105 33.7606 45.0948 33.7606 43.9653V38.368C33.7606 37.2385 32.8462 36.3229 31.7183 36.3229Z" fill="#008475" stroke="#DEDEDE" stroke-width="0.238183"></path><path d="M51.9001 4.78326C51.9001 5.59526 51.7055 6.35649 51.3161 7.06698C50.9412 7.77748 50.3426 8.35022 49.5206 8.78521C48.7131 9.2202 47.6892 9.43766 46.4489 9.43766H43.918V15.2667H40.8896V0.0853271H46.4489C47.6171 0.0853271 48.6121 0.288325 49.4341 0.694319C50.2561 1.10031 50.869 1.65856 51.2728 2.36904C51.691 3.07954 51.9001 3.88428 51.9001 4.78326ZM46.3191 6.97999C47.1556 6.97999 47.7757 6.79149 48.1795 6.41449C48.5833 6.02299 48.7851 5.47926 48.7851 4.78326C48.7851 3.30429 47.9631 2.5648 46.3191 2.5648H43.918V6.97999H46.3191Z" fill="currentColor"></path><path d="M51.8574 9.81983C51.8574 8.78632 52.0593 7.8697 52.4632 7.06995C52.8793 6.2702 53.436 5.65501 54.1335 5.22437C54.8433 4.79374 55.6325 4.57843 56.5014 4.57843C57.2601 4.57843 57.9209 4.73222 58.4838 5.03982C59.0589 5.34741 59.5178 5.73498 59.8605 6.20252V4.74453H62.4486V14.9689H59.8605V13.4741C59.53 13.9539 59.0712 14.3538 58.4838 14.6737C57.9086 14.9813 57.2417 15.1351 56.4831 15.1351C55.6264 15.1351 54.8433 14.9136 54.1335 14.4707C53.436 14.0278 52.8793 13.4064 52.4632 12.6067C52.0593 11.7946 51.8574 10.8657 51.8574 9.81983ZM59.8605 9.85679C59.8605 9.22925 59.7381 8.69405 59.4933 8.25111C59.2486 7.79587 58.9182 7.45136 58.5022 7.21759C58.0861 6.97152 57.6395 6.84848 57.1622 6.84848C56.685 6.84848 56.2444 6.96536 55.8406 7.19913C55.4368 7.4329 55.1063 7.77741 54.8494 8.23265C54.6047 8.67559 54.4823 9.20467 54.4823 9.81983C54.4823 10.4351 54.6047 10.9764 54.8494 11.4439C55.1063 11.8992 55.4368 12.2498 55.8406 12.4959C56.2567 12.742 56.6971 12.8651 57.1622 12.8651C57.6395 12.8651 58.0861 12.7481 58.5022 12.5144C58.9182 12.2683 59.2486 11.9238 59.4933 11.4808C59.7381 11.0256 59.8605 10.4842 59.8605 9.85679Z" fill="currentColor"></path><path d="M70.0645 9.81983C70.0645 8.78632 70.2664 7.8697 70.6702 7.06995C71.0863 6.2702 71.6431 5.65501 72.3406 5.22437C73.0503 4.79374 73.8396 4.57843 74.7084 4.57843C75.4671 4.57843 76.1279 4.73222 76.6909 5.03982C77.266 5.34741 77.7249 5.73498 78.0675 6.20252V4.74453H80.6556V14.9689H78.0675V13.4741C77.7371 13.9539 77.2782 14.3538 76.6909 14.6737C76.1157 14.9813 75.4488 15.1351 74.6901 15.1351C73.8335 15.1351 73.0503 14.9136 72.3406 14.4707C71.6431 14.0278 71.0863 13.4064 70.6702 12.6067C70.2664 11.7946 70.0645 10.8657 70.0645 9.81983ZM78.0675 9.85679C78.0675 9.22925 77.9451 8.69405 77.7004 8.25111C77.4556 7.79587 77.1252 7.45136 76.7092 7.21759C76.2931 6.97152 75.8465 6.84848 75.3692 6.84848C74.892 6.84848 74.4514 6.96536 74.0476 7.19913C73.6438 7.4329 73.3134 7.77741 73.0565 8.23265C72.8117 8.67559 72.6893 9.20467 72.6893 9.81983C72.6893 10.4351 72.8117 10.9764 73.0565 11.4439C73.3134 11.8992 73.6438 12.2498 74.0476 12.4959C74.4637 12.742 74.9043 12.8651 75.3692 12.8651C75.8465 12.8651 76.2931 12.7481 76.7092 12.5144C77.1252 12.2683 77.4556 11.9238 77.7004 11.4808C77.9451 11.0256 78.0675 10.4842 78.0675 9.85679Z" fill="currentColor"></path><path d="M81.5464 28.8716C81.5464 27.8307 81.7497 26.9075 82.1565 26.102C82.5754 25.2965 83.1362 24.6769 83.8388 24.2431C84.5537 23.8094 85.3486 23.5925 86.2236 23.5925C86.9878 23.5925 87.6534 23.7474 88.2203 24.0572C88.7996 24.367 89.2617 24.7574 89.6069 25.2283V23.7598H92.2138V34.0577H89.6069V32.5521C89.2741 33.0354 88.8118 33.4381 88.2203 33.7603C87.641 34.0701 86.9693 34.225 86.2051 34.225C85.3424 34.225 84.5537 34.0019 83.8388 33.5558C83.1362 33.1097 82.5754 32.4839 82.1565 31.6784C81.7497 30.8605 81.5464 29.925 81.5464 28.8716ZM89.6069 28.9088C89.6069 28.2768 89.4836 27.7377 89.2371 27.2916C88.9906 26.8331 88.6578 26.4861 88.2388 26.2507C87.8197 26.0028 87.3699 25.8789 86.8892 25.8789C86.4085 25.8789 85.9648 25.9966 85.5581 26.232C85.1514 26.4675 84.8186 26.8145 84.5598 27.273C84.3133 27.7191 84.19 28.2519 84.19 28.8716C84.19 29.4912 84.3133 30.0364 84.5598 30.5073C84.8186 30.9658 85.1514 31.3191 85.5581 31.5669C85.9771 31.8147 86.4209 31.9386 86.8892 31.9386C87.3699 31.9386 87.8197 31.821 88.2388 31.5855C88.6578 31.3376 88.9906 30.9907 89.2371 30.5446C89.4836 30.086 89.6069 29.5407 89.6069 28.9088Z" fill="currentColor"></path><path d="M46.1876 19.0687C47.7571 19.0687 49.1338 19.3771 50.318 19.994C51.5165 20.6108 52.4367 21.493 53.0787 22.6406C53.735 23.7739 54.0631 25.0937 54.0631 26.5999C54.0631 28.1062 53.735 29.4259 53.0787 30.5592C52.4367 31.6781 51.5165 32.546 50.318 33.1629C49.1338 33.7797 47.7571 34.0881 46.1876 34.0881H40.9658V19.0687H46.1876ZM46.0806 31.5275C47.65 31.5275 48.8627 31.0971 49.7188 30.2364C50.5748 29.3757 51.0028 28.1636 51.0028 26.5999C51.0028 25.0363 50.5748 23.817 49.7188 22.9419C48.8627 22.0525 47.65 21.6078 46.0806 21.6078H43.9619V31.5275H46.0806Z" fill="currentColor"></path><path d="M105.143 15.1351C104.163 15.1351 103.282 14.9198 102.5 14.4891C101.716 14.0462 101.098 13.4248 100.646 12.6251C100.206 11.8254 99.9844 10.9025 99.9844 9.85679C99.9844 8.81093 100.211 7.88814 100.664 7.0884C101.129 6.28865 101.759 5.67347 102.555 5.24283C103.35 4.79989 104.237 4.57843 105.216 4.57843C106.195 4.57843 107.082 4.79989 107.878 5.24283C108.673 5.67347 109.297 6.28865 109.75 7.0884C110.215 7.88814 110.447 8.81093 110.447 9.85679C110.447 10.9025 110.209 11.8254 109.732 12.6251C109.267 13.4248 108.63 14.0462 107.823 14.4891C107.027 14.9198 106.134 15.1351 105.143 15.1351ZM105.143 12.8835C105.608 12.8835 106.042 12.7728 106.446 12.5512C106.862 12.3175 107.193 11.973 107.437 11.5178C107.682 11.0625 107.804 10.5088 107.804 9.85679C107.804 8.88475 107.547 8.14038 107.034 7.62361C106.532 7.09456 105.914 6.83002 105.18 6.83002C104.445 6.83002 103.828 7.09456 103.326 7.62361C102.836 8.14038 102.591 8.88475 102.591 9.85679C102.591 10.8288 102.83 11.5793 103.307 12.1084C103.797 12.6251 104.409 12.8835 105.143 12.8835Z" fill="currentColor"></path><path d="M121.033 4.74457V14.969H118.445V13.6772C118.115 14.12 117.68 14.4707 117.142 14.7291C116.616 14.9752 116.041 15.0982 115.416 15.0982C114.621 15.0982 113.917 14.9322 113.306 14.5999C112.694 14.2554 112.21 13.7571 111.855 13.105C111.512 12.4406 111.342 11.6532 111.342 10.7426V4.74457H113.911V10.3735C113.911 11.1856 114.113 11.8131 114.517 12.256C114.921 12.6866 115.471 12.902 116.169 12.902C116.878 12.902 117.435 12.6866 117.84 12.256C118.243 11.8131 118.445 11.1856 118.445 10.3735V4.74457H121.033Z" fill="currentColor"></path><path d="M127.875 4.59692C129.086 4.59692 130.065 4.98449 130.812 5.75963C131.558 6.52247 131.931 7.59289 131.931 8.97092V14.969H129.361V9.32154C129.361 8.50953 129.16 7.88819 128.756 7.45755C128.352 7.01462 127.802 6.79315 127.104 6.79315C126.394 6.79315 125.831 7.01462 125.415 7.45755C125.012 7.88819 124.809 8.50953 124.809 9.32154V14.969H122.24V4.74457H124.809V6.01801C125.152 5.57508 125.587 5.23057 126.113 4.98449C126.651 4.72611 127.238 4.59692 127.875 4.59692Z" fill="currentColor"></path><path d="M136.334 6.86697V11.8131C136.334 12.1576 136.413 12.4098 136.572 12.5698C136.743 12.7174 137.025 12.7912 137.417 12.7912H138.609V14.969H136.994C134.828 14.969 133.745 13.9109 133.745 11.7947V6.86697H132.534V4.74456H133.745V2.21613H136.334V4.74456H138.609V6.86697H136.334Z" fill="currentColor"></path><path d="M94.7518 4.59692C96.0001 4.59692 97.0038 4.98449 97.7628 5.75963C98.5337 6.52247 98.9191 7.59289 98.9191 8.97092V14.969H96.3494V9.32154C96.3494 8.52183 96.1472 7.91279 95.7437 7.49447C95.3394 7.06384 94.7888 6.84851 94.0911 6.84851C93.3943 6.84851 92.8374 7.06384 92.4213 7.49447C92.0169 7.91279 91.8156 8.52183 91.8156 9.32154V14.969H89.2455V9.32154C89.2455 8.52183 89.0436 7.91279 88.6397 7.49447C88.2359 7.06384 87.6852 6.84851 86.9878 6.84851C86.278 6.84851 85.7152 7.06384 85.2991 7.49447C84.8952 7.91279 84.6933 8.52183 84.6933 9.32154V14.969H82.1235V4.74457H84.6933V5.9811C85.0238 5.55046 85.4459 5.21211 85.9598 4.96604C86.4861 4.71996 87.0612 4.59692 87.6853 4.59692C88.4807 4.59692 89.1904 4.76918 89.8145 5.11368C90.4383 5.44589 90.9221 5.92573 91.265 6.55323C91.5954 5.96264 92.072 5.48895 92.6966 5.13214C93.3329 4.77533 94.018 4.59692 94.7518 4.59692Z" fill="currentColor"></path><path d="M66.4863 6.33176C66.8166 5.79039 67.245 5.36591 67.7711 5.05832C68.3096 4.75072 68.9214 4.59692 69.6067 4.59692V7.30991H68.9275C68.1199 7.30991 67.508 7.50062 67.092 7.88203C66.6882 8.26346 66.4863 8.92786 66.4863 9.87523V14.969H63.9165V4.74457H66.4863V6.33176Z" fill="currentColor"></path><path d="M57.9638 23.7598V34.0577H55.3755V23.7598H57.9638Z" fill="currentColor"></path><path d="M73.618 23.7598V34.0577H71.0298V23.7598H73.618Z" fill="currentColor"></path><path d="M96.2801 20.3025V34.0578H93.6924V20.3025H96.2801Z" fill="currentColor"></path><path d="M78.6657 25.8974V30.8792C78.6657 31.2261 78.7458 31.4801 78.9061 31.6412C79.0786 31.79 79.362 31.8643 79.7565 31.8643H80.9581V34.0577H79.3313C77.1498 34.0577 76.059 32.992 76.059 30.8606V25.8974H74.8389V23.7598H76.059V21.2133H78.6657V23.7598H80.9581V25.8974H78.6657Z" fill="currentColor"></path><path d="M63.86 23.5925C64.6241 23.5925 65.2958 23.7474 65.875 24.0572C66.4543 24.3547 66.9104 24.745 67.2431 25.2283V23.7598H69.8499V34.1321C69.8499 35.0863 69.6588 35.9351 69.2767 36.6787C68.8947 37.4346 68.3215 38.0294 67.5574 38.4631C66.7932 38.9092 65.8689 39.1323 64.7843 39.1323C63.33 39.1323 62.1345 38.7915 61.1978 38.1099C60.2734 37.4283 59.7496 36.499 59.6263 35.3217H62.1961C62.3317 35.7926 62.6213 36.1644 63.065 36.437C63.521 36.722 64.0695 36.8645 64.7104 36.8645C65.4622 36.8645 66.0722 36.6353 66.5406 36.1768C67.0089 35.7306 67.2431 35.0491 67.2431 34.1321V32.5335C66.9104 33.0168 66.4482 33.4195 65.8566 33.7417C65.2773 34.0639 64.6117 34.225 63.86 34.225C62.9972 34.225 62.2084 34.0019 61.4935 33.5558C60.7787 33.1097 60.2118 32.4839 59.7928 31.6784C59.386 30.8605 59.1826 29.925 59.1826 28.8716C59.1826 27.8307 59.386 26.9075 59.7928 26.102C60.2118 25.2965 60.7725 24.6769 61.475 24.2431C62.1899 23.8094 62.9849 23.5925 63.86 23.5925ZM67.2431 28.9088C67.2431 28.2768 67.1199 27.7377 66.8734 27.2916C66.6269 26.8331 66.2941 26.4861 65.875 26.2507C65.456 26.0028 65.0062 25.8789 64.5255 25.8789C64.0448 25.8789 63.6011 25.9966 63.1944 26.232C62.7877 26.4675 62.4549 26.8145 62.1961 27.273C61.9496 27.7191 61.8263 28.2519 61.8263 28.8716C61.8263 29.4912 61.9496 30.0364 62.1961 30.5073C62.4549 30.9658 62.7877 31.3191 63.1944 31.5669C63.6135 31.8147 64.0571 31.9386 64.5255 31.9386C65.0062 31.9386 65.456 31.821 65.875 31.5855C66.2941 31.3376 66.6269 30.9907 66.8734 30.5446C67.1199 30.086 67.2431 29.5407 67.2431 28.9088Z" fill="currentColor"></path><path d="M57.6674 19.893H55.6718C55.5082 19.893 55.3755 20.0259 55.3755 20.1897V22.2368C55.3755 22.4007 55.5082 22.5336 55.6718 22.5336H57.6674C57.8311 22.5336 57.9637 22.4007 57.9637 22.2368V20.1897C57.9637 20.0259 57.8311 19.893 57.6674 19.893Z" fill="currentColor"></path><path d="M73.3217 19.893H71.3261C71.1624 19.893 71.0298 20.0259 71.0298 20.1897V22.2368C71.0298 22.4007 71.1624 22.5336 71.3261 22.5336H73.3217C73.4854 22.5336 73.618 22.4007 73.618 22.2368V20.1897C73.618 20.0259 73.4854 19.893 73.3217 19.893Z" fill="currentColor"></path></g></svg></div>
+  <span class="stamp" id="stamp">—</span>
+  <div class="spacer"></div>
+  <span class="topbar-label">Board Watch</span>
+  <div class="topbar-dot"></div>
+  <button class="btn ghost" id="manageBtn">Manage boards</button>
+  <button class="btn primary" id="syncBtn">Refresh from Monday</button>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-kicker">Monday.com Task Tracking</div>
+    <h1 class="hero-title">Every deadline, <span class="accent">in view</span></h1>
+    <p class="hero-sub">Track tasks across all your Monday boards in one place — flagged the moment they're overdue or due soon, filterable by person, department, board and status.</p>
+  </div>
+</section>
+
+<div class="page">
+
+<div id="errBanner" style="display:none"></div>
+<section class="summary" id="summary"></section>
+
+<section class="filters">
+  <div class="field">
+    <label>Person</label>
+    <select id="fPerson"><option value="">Everyone</option></select>
+  </div>
+  <div class="field" id="deptField" style="display:none">
+    <label>Department</label>
+    <select id="fDept"><option value="">All departments</option></select>
+  </div>
+  <div class="field">
+    <label>Board</label>
+    <select id="fBoard"><option value="">All boards</option></select>
+  </div>
+  <div class="field">
+    <label>Urgency</label>
+    <select id="fState">
+      <option value="">Any</option>
+      <option value="overdue">Overdue</option>
+      <option value="warning">Due soon</option>
+      <option value="ok">On track</option>
+      <option value="done">Done</option>
+    </select>
+  </div>
+  <div class="field" id="statusField" style="display:none">
+    <label>Status</label>
+    <div class="multi">
+      <button type="button" class="multi-btn" id="statusBtn">All statuses</button>
+      <div class="multi-menu" id="statusMenu"></div>
+    </div>
+  </div>
+  <div class="field">
+    <label>Due on or before</label>
+    <input type="date" id="fDue">
+  </div>
+  <div class="field">
+    <label>Comments</label>
+    <select id="fComments">
+      <option value="">Any</option>
+      <option value="yes">Has comments</option>
+      <option value="no">No comments</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Search</label>
+    <input type="text" id="fSearch" placeholder="task title…">
+  </div>
+  <label class="chk"><input type="checkbox" id="fHideDone" checked> Hide done</label>
+  <div class="spacer"></div>
+  <button class="btn ghost" id="clearBtn" style="align-self:flex-end">Clear</button>
+</section>
+
+<div class="wrap">
+  <table id="tbl">
+    <thead><tr>
+      <th data-k="state">Flag</th>
+      <th data-k="title">Task</th>
+      <th data-k="person">Owner</th>
+      <th data-k="department" class="dept-col">Dept</th>
+      <th data-k="board_name">Board</th>
+      <th data-k="due_date">Due</th>
+      <th data-k="status">Status</th>
+      <th data-k="update_count">Comments</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div class="empty" id="empty" style="display:none">No tasks match these filters.</div>
+</div>
+
+<!-- First-run API token modal -->
+<div class="overlay" id="tokenModal">
+  <div class="modal">
+    <header><h2>Connect to Monday</h2></header>
+    <div class="body">
+      <p class="hint">Board Watch needs a Monday API token to read your boards. It's saved
+        locally in a <code>.env</code> file on this machine (as <code>MONDAY_API_TOKEN</code>)
+        and never leaves your computer except to talk to Monday.</p>
+      <ol class="hint" style="padding-left:18px;line-height:1.7">
+        <li>In monday.com, click your avatar → <b>Developers</b> → <b>My access tokens</b>.</li>
+        <li>Copy the token and paste it below.</li>
+      </ol>
+      <div class="field" style="margin-top:6px">
+        <label>Monday API token</label>
+        <input type="password" id="tokenInput" placeholder="paste token…" style="min-width:100%">
+      </div>
+      <div class="msg" id="tokenMsg"></div>
+    </div>
+    <div class="foot">
+      <button class="btn primary" id="saveTokenBtn">Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task detail modal -->
+<div class="overlay" id="detailModal">
+  <div class="modal detail-modal">
+    <header>
+      <div id="detailFlag"></div>
+      <h2 id="detailTitle">Task</h2>
+      <div id="detailMeta" class="detail-meta"></div>
+    </header>
+    <div class="body">
+      <div class="detail-section">
+        <h3 class="detail-h3">Details</h3>
+        <div id="detailFields" class="detail-fields"></div>
+      </div>
+      <div class="detail-section">
+        <h3 class="detail-h3">Updates <span id="detailUpdateCount" class="detail-count"></span></h3>
+        <div id="detailUpdates" class="detail-updates"></div>
+      </div>
+      <div class="detail-section">
+        <h3 class="detail-h3">Post an update</h3>
+        <textarea id="composeText" class="compose-text" rows="3" placeholder="Write an update to post back to Monday…"></textarea>
+        <div class="compose-row">
+          <label class="chk" id="composeTagWrap" style="display:none">
+            <input type="checkbox" id="composeTag" checked>
+            <span id="composeTagLabel">Tag assignee</span>
+          </label>
+          <div class="spacer"></div>
+          <button class="btn primary" id="composeBtn">Post to Monday</button>
+        </div>
+        <div class="msg" id="composeMsg"></div>
+      </div>
+    </div>
+    <div class="foot">
+      <a id="detailMondayLink" class="btn ghost" href="#" target="_blank" rel="noopener">Open in Monday ↗</a>
+      <button class="btn primary" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manage boards modal -->
+<div class="overlay" id="manageModal">
+  <div class="modal">
+    <header><h2>Tracked boards</h2></header>
+    <div class="body">
+      <p class="hint">Add a board by its numeric ID (found in the board's URL on monday.com).
+        Columns are mapped once and saved, so boards with different layouts all work.</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input type="text" id="newBoardId" placeholder="e.g. 1234567890" style="flex:1">
+        <button class="btn primary" id="loadColsBtn">Add & map</button>
+      </div>
+      <div id="trackedList"></div>
+      <div class="msg" id="manageMsg"></div>
+    </div>
+    <div class="foot">
+      <button class="btn ghost" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Column mapping modal -->
+<div class="overlay" id="mapModal">
+  <div class="modal">
+    <header><h2 id="mapTitle">Map columns</h2></header>
+    <div class="body">
+      <p class="hint">Every column starts unmapped — set each one yourself; nothing is guessed.
+        <b>Due date</b> and <b>Status</b> are required for overdue tracking. <b>Owner / Person</b>
+        can be set on <b>more than one column</b> — if a board has separate Assignor and Assignee
+        columns, mark both and everyone is pooled, so filtering to a person finds every task they're
+        on. <b>Department</b> is optional and powers the department filter. Task name is used for the
+        title unless you map one to Title.</p>
+      <div id="mapRows"></div>
+      <div class="field" style="margin-top:16px">
+        <label>Status label(s) that count as done</label>
+        <input type="text" id="doneLabels" placeholder="Done, Complete" value="Done">
+      </div>
+      <div class="msg" id="mapMsg"></div>
+    </div>
+    <div class="foot">
+      <button class="btn ghost" data-close>Cancel</button>
+      <button class="btn primary" id="saveMapBtn">Save mapping</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = {
+  data:      () => fetch('/api/data').then(r=>r.json()),
+  columns:   id => fetch('/api/board-columns?id='+encodeURIComponent(id)).then(r=>r.json()),
+  saveBoard: b  => fetch('/api/save-board',{method:'POST',body:JSON.stringify(b)}).then(r=>r.json()),
+  removeBoard:id=> fetch('/api/remove-board',{method:'POST',body:JSON.stringify({id})}).then(r=>r.json()),
+  sync:      () => fetch('/api/sync',{method:'POST'}).then(r=>r.json()),
+  tokenStatus:()=> fetch('/api/token-status').then(r=>r.json()),
+  saveToken: t  => fetch('/api/save-token',{method:'POST',body:JSON.stringify({token:t})}).then(r=>r.json()),
+  postUpdate: (item_id,text,mentions)=> fetch('/api/post-update',{method:'POST',body:JSON.stringify({item_id,text,mentions})}).then(r=>r.json()),
+};
+
+let STATE = {tasks:[], boards:[], people:[], tracked:[]};
+let sort = {k:'due_date', dir:1};
+let hiddenStatuses = new Set();   // statuses unticked in the Status filter (hidden)
+let statusMenuBuilt = false;
+let detailItemId = null;          // item currently open in the detail modal
+let detailMentions = [];          // [{id,name}] assignees available to tag
+
+const ROLE_OPTS = [
+  ['ignore','— ignore —'],['title','Title'],['person','Owner / Person'],
+  ['due_date','Due date'],['status','Status'],['department','Department']
+];
+// "person" may be on several columns (Assignor + Assignee both count); every
+// other role is single-column and flagged if two columns claim it.
+const MULTI_ROLES = ['person'];
+const UNIQUE_ROLES = ['title','due_date','status','department'];
+const avatarColor = name => {
+  let h=0; for(const c of name) h=(h*31+c.charCodeAt(0))%360;
+  return `hsl(${h} 55% 62%)`;
+};
+const initials = name => name.split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
+
+// Colour common Monday statuses to match their usual board colours; fall back to
+// a stable hash so any custom label still gets a consistent colour.
+const STATUS_COLORS = {
+  'done':'#3ecf8e','complete':'#3ecf8e','completed':'#3ecf8e','closed':'#3ecf8e',
+  'working on it':'#fdab3d','in progress':'#fdab3d','doing':'#fdab3d',
+  'stuck':'#e2445c','blocked':'#e2445c','on hold':'#e2445c',
+  'not started':'#c4c4c4','to do':'#c4c4c4','todo':'#797e93','backlog':'#797e93',
+  'review':'#a25ddc','in review':'#a25ddc','waiting':'#0086c0'
+};
+const statusColor = s => {
+  const key=(s||'').trim().toLowerCase();
+  if(STATUS_COLORS[key]) return STATUS_COLORS[key];
+  let h=0; for(const c of key) h=(h*31+c.charCodeAt(0))%360;
+  return `hsl(${h} 45% 55%)`;
+};
+
+function flagHtml(t){
+  const map={overdue:'Overdue',warning:'Due soon',ok:'On track',done:'Done',none:'No date'};
+  let label = map[t.state]||t.state;
+  if(t.state==='overdue') label = `${-t.days_left}d over`;
+  else if(t.state==='warning') label = t.days_left===0?'Today':`${t.days_left}d left`;
+  return `<span class="flag ${t.state}"><span class="dot"></span>${label}</span>`;
+}
+
+function ownerCell(t){
+  const people = (t.people && t.people.length) ? t.people : (t.person && t.person!=='Unassigned' ? [t.person] : []);
+  if(!people.length) return '<span style="color:var(--faint)">Unassigned</span>';
+  const first = people[0];
+  const extra = people.length-1;
+  const more = extra>0 ? `<span class="pill" style="margin-left:4px" title="${esc(people.join(', '))}">+${extra}</span>` : '';
+  return `<span class="person" title="${esc(people.join(', '))}">`
+    + `<span class="avatar" style="background:${avatarColor(first)}">${initials(first)}</span>`
+    + `${esc(first)}</span>${more}`;
+}
+
+function commentCell(t){
+  const n = t.update_count || 0;
+  if(!n){
+    return '<span class="comment-none" title="No comments">—</span>';
+  }
+  const lu = t.last_update || {};
+  const tip = lu.author
+    ? `Latest by ${lu.author}${lu.date? ' · '+lu.date : ''}${lu.snippet? '\n\n"'+lu.snippet+'"' : ''}`
+    : `${n} comment${n>1?'s':''}`;
+  return `<span class="comment-badge" title="${esc(tip)}">`
+    + `<svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true">`
+    + `<path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h9A1.5 1.5 0 0 1 14 3.5v6A1.5 1.5 0 0 1 12.5 11H6l-3 3v-3H3.5A1.5 1.5 0 0 1 2 9.5v-6Z" fill="currentColor"/></svg>`
+    + `<span>${n}</span></span>`;
+}
+
+function render(){
+  // populate filter dropdowns
+  const fp=$('#fPerson'), fb=$('#fBoard'), fd=$('#fDept');
+  if(fp.options.length<=1) STATE.people.forEach(p=>fp.add(new Option(p,p)));
+  if(fb.options.length<=1) STATE.boards.forEach(b=>fb.add(new Option(b.name,b.id)));
+  const depts = STATE.departments||[];
+  if(fd.options.length<=1 && depts.length) depts.forEach(d=>fd.add(new Option(d,d)));
+  $('#deptField').style.display = depts.length ? '' : 'none';
+
+  // build the Status checkbox menu once, from the distinct statuses
+  const statuses = STATE.statuses||[];
+  $('#statusField').style.display = statuses.length ? '' : 'none';
+  if(statuses.length && !statusMenuBuilt) buildStatusMenu(statuses);
+
+  const person=$('#fPerson').value, board=$('#fBoard').value, st=$('#fState').value,
+        dept=$('#fDept').value, comments=$('#fComments').value,
+        due=$('#fDue').value, q=$('#fSearch').value.toLowerCase(), hideDone=$('#fHideDone').checked;
+
+  // a task involves a person if they appear in ANY mapped people column
+  const hasPerson = (t,name) => (t.people && t.people.length ? t.people : [t.person]).includes(name);
+
+  let rows = STATE.tasks.filter(t=>{
+    if(person && !hasPerson(t,person)) return false;
+    if(dept && t.department!==dept) return false;
+    if(board && t.board_id!==board) return false;
+    if(st && t.state!==st) return false;
+    if(comments==='yes' && !t.update_count) return false;
+    if(comments==='no' && t.update_count) return false;
+    if(hideDone && t.is_done) return false;
+    if(t.status && hiddenStatuses.has(t.status)) return false;
+    if(due && (!t.due_date || t.due_date>due)) return false;
+    if(q && !t.title.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  // summary counts (respect person/dept/board filters, not the urgency filter)
+  const base = STATE.tasks.filter(t=>{
+    if(person && !hasPerson(t,person)) return false;
+    if(dept && t.department!==dept) return false;
+    if(board && t.board_id!==board) return false;
+    if(t.status && hiddenStatuses.has(t.status)) return false;
+    return true;
+  });
+  const c = s => base.filter(t=>t.state===s).length;
+  $('#summary').innerHTML = `
+    ${stat('total','Tracked', base.filter(t=>!t.is_done).length)}
+    ${stat('overdue','Overdue', c('overdue'))}
+    ${stat('warning','Due soon', c('warning'))}
+    ${stat('ok','On track', c('ok'))}`;
+
+  // sort
+  const order={overdue:0,warning:1,ok:2,none:3,done:4};
+  rows.sort((a,b)=>{
+    let av=a[sort.k], bv=b[sort.k];
+    if(sort.k==='state'){av=order[av];bv=order[bv];}
+    if(sort.k==='due_date'){av=av||'9999';bv=bv||'9999';}
+    av=av??''; bv=bv??'';
+    return (av>bv?1:av<bv?-1:0)*sort.dir;
+  });
+
+  const showDept = (STATE.departments||[]).length>0;
+  $('#rows').innerHTML = rows.map(t=>`
+    <tr class="${t.state}" data-id="${esc(t.id)}">
+      <td>${flagHtml(t)}</td>
+      <td class="title">${esc(t.title)}${t.group?` <span class="pill">${esc(t.group)}</span>`:''}</td>
+      <td>${ownerCell(t)}</td>
+      <td class="dept-col">${t.department?`<span class="pill">${esc(t.department)}</span>`:'<span style="color:var(--faint)">—</span>'}</td>
+      <td><span class="pill">${esc(t.board_name)}</span></td>
+      <td style="font-family:var(--mono);font-size:12.5px">${t.due_date||'<span style="color:var(--faint)">—</span>'}</td>
+      <td>${t.status?`<span class="status-pill" style="--sc:${statusColor(t.status)}">${esc(t.status)}</span>`:'<span style="color:var(--faint)">—</span>'}</td>
+      <td>${commentCell(t)}</td>
+    </tr>`).join('');
+  document.querySelectorAll('.dept-col').forEach(el=>el.style.display = showDept?'':'none');
+  $('#empty').style.display = rows.length?'none':'block';
+}
+
+// ---- task detail ----
+function openDetail(id){
+  const t = (STATE.tasks||[]).find(x=>String(x.id)===String(id));
+  if(!t) return;
+  $('#detailFlag').innerHTML = flagHtml(t);
+  $('#detailTitle').textContent = t.title;
+
+  // meta line: board · group
+  const meta=[];
+  meta.push(`<span class="pill">${esc(t.board_name)}</span>`);
+  if(t.group) meta.push(`<span class="pill">${esc(t.group)}</span>`);
+  $('#detailMeta').innerHTML = meta.join('');
+
+  // fields — prefer the full pulled column list; fall back to derived values
+  const fields = (t.fields && t.fields.length) ? t.fields.map(f=>({label:f.label||f.id, text:f.text}))
+    : [
+        t.due_date && {label:'Due date', text:t.due_date},
+        t.status && {label:'Status', text:t.status},
+        (t.people&&t.people.length) && {label:'Owner', text:t.people.join(', ')},
+        t.department && {label:'Department', text:t.department},
+      ].filter(Boolean);
+  $('#detailFields').innerHTML = fields.length
+    ? '<dl class="detail-fields" style="display:contents">'
+      + fields.map(f=>`<dt>${esc(f.label)}</dt><dd>${esc(f.text)}</dd>`).join('')
+      + '</dl>'
+    : '<div class="detail-empty">No field values pulled for this task.</div>';
+
+  // updates
+  const ups = t.updates||[];
+  $('#detailUpdateCount').textContent = ups.length ? ups.length : '';
+  $('#detailUpdates').innerHTML = ups.length
+    ? ups.map(u=>`
+        <div class="update-card">
+          <div class="u-head">
+            <span class="u-avatar" style="background:${avatarColor(u.author||'?')}">${initials(u.author||'?')}</span>
+            <span class="u-author">${esc(u.author||'Someone')}</span>
+            <span class="u-date">${esc(u.date||'')}</span>
+          </div>
+          <div class="u-body">${esc(u.body||'')}</div>
+        </div>`).join('')
+    : '<div class="detail-empty">No updates on this task yet.</div>';
+
+  // Open in Monday — use the account slug when we have it so the link is direct;
+  // otherwise fall back to the generic host, which redirects when logged in.
+  const acct = (STATE.monday_account||'').trim();
+  const host = acct ? `https://${acct}.monday.com` : 'https://monday.com';
+  $('#detailMondayLink').href = `${host}/boards/${encodeURIComponent(t.board_id)}/pulses/${encodeURIComponent(t.id)}`;
+
+  // compose box — remember which item we're posting to, reset the fields
+  detailItemId = t.id;
+  const ids = t.people_ids || [];
+  const names = t.people || [];
+  // pair up ids with names where we can (positional; both come from the same columns)
+  detailMentions = ids.map((id,i)=>({id, name: names[i] || 'assignee'}));
+  $('#composeText').value = '';
+  $('#composeMsg').className = 'msg';
+  $('#composeMsg').textContent = '';
+  const tagWrap = $('#composeTagWrap');
+  if(detailMentions.length){
+    tagWrap.style.display = '';
+    $('#composeTag').checked = true;
+    const label = detailMentions.length===1
+      ? `Tag ${detailMentions[0].name}`
+      : `Tag ${detailMentions.length} assignees`;
+    $('#composeTagLabel').textContent = label;
+  }else{
+    tagWrap.style.display = 'none';   // nobody assigned → nothing to tag
+  }
+
+  openModal('detailModal');
+}
+
+$('#rows').addEventListener('click', e=>{
+  const tr = e.target.closest('tr[data-id]');
+  if(tr) openDetail(tr.dataset.id);
+});
+
+// ---- post an update back to Monday ----
+$('#composeBtn').onclick = async ()=>{
+  const text = $('#composeText').value.trim();
+  const msg = $('#composeMsg');
+  if(!text){
+    msg.className='msg err'; msg.textContent='Write something first.'; return;
+  }
+  const wantTag = $('#composeTag') && $('#composeTag').checked && detailMentions.length;
+  const mentions = wantTag ? detailMentions : [];
+  const who = mentions.length ? ' and tag '+mentions.map(m=>m.name).join(', ') : '';
+  if(!confirm(`Post this update to Monday${who}?\n\nThis writes to the live board.`)) return;
+
+  const btn = $('#composeBtn');
+  btn.disabled = true; const label = btn.textContent; btn.innerHTML = '<span class="spin"></span>Posting…';
+  msg.className='msg'; msg.textContent='';
+  try{
+    const r = await api.postUpdate(detailItemId, text, mentions);
+    if(r.error){
+      msg.className='msg err'; msg.textContent = r.error;
+    }else{
+      msg.className='msg ok';
+      msg.textContent = r.warning ? ('Posted — '+r.warning) : 'Posted to Monday ✓  Refresh to see it in the list.';
+      $('#composeText').value='';
+    }
+  }catch(err){
+    msg.className='msg err'; msg.textContent='Could not reach the server: '+err;
+  }finally{
+    btn.disabled=false; btn.textContent=label;
+  }
+};
+
+const stat=(cls,label,n)=>`<div class="stat ${cls}"><span class="bar"></span><div class="n">${n}</div><div class="l">${label}</div></div>`;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ---- status multiselect ----
+function buildStatusMenu(statuses){
+  const menu=$('#statusMenu');
+  menu.innerHTML =
+    `<div class="mm-actions">
+       <button type="button" id="stAll">Select all</button>
+       <button type="button" id="stNone">Clear all</button>
+     </div>` +
+    statuses.map(s=>`
+      <label class="multi-opt">
+        <input type="checkbox" value="${esc(s)}" ${hiddenStatuses.has(s)?'':'checked'}>
+        <span class="swatch" style="background:${statusColor(s)}"></span>
+        <span>${esc(s)}</span>
+      </label>`).join('');
+
+  menu.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change',()=>{
+      if(cb.checked) hiddenStatuses.delete(cb.value); else hiddenStatuses.add(cb.value);
+      updateStatusBtn(statuses); render();
+    });
+  });
+  $('#stAll').onclick=()=>{ hiddenStatuses.clear();
+    menu.querySelectorAll('input').forEach(cb=>cb.checked=true); updateStatusBtn(statuses); render(); };
+  $('#stNone').onclick=()=>{ statuses.forEach(s=>hiddenStatuses.add(s));
+    menu.querySelectorAll('input').forEach(cb=>cb.checked=false); updateStatusBtn(statuses); render(); };
+
+  statusMenuBuilt=true;
+  updateStatusBtn(statuses);
+}
+function updateStatusBtn(statuses){
+  const shown = statuses.length - hiddenStatuses.size;
+  const btn=$('#statusBtn');
+  if(hiddenStatuses.size===0) btn.textContent='All statuses';
+  else if(shown===0) btn.textContent='No statuses';
+  else if(shown===1) btn.textContent=statuses.find(s=>!hiddenStatuses.has(s));
+  else btn.textContent=`${shown} statuses`;
+}
+$('#statusBtn').onclick=e=>{ e.stopPropagation(); $('#statusMenu').classList.toggle('open'); };
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.multi')) $('#statusMenu').classList.remove('open');
+});
+
+// ---- load ----
+function monthName(iso){ return iso ? new Date(iso+'T00:00').toLocaleDateString(undefined,{month:'short',year:'numeric'}) : ''; }
+async function load(){
+  STATE = await api.data();
+  let stamp = STATE.generated_at
+    ? `synced ${STATE.generated_at.replace('T',' ')} · today ${STATE.today} · warn ${STATE.warning_days}d`
+    : 'no data yet — add a board and refresh';
+  const pf = STATE.prefilter;
+  if(pf && (pf.window_start || (pf.excluded_departments||[]).length)){
+    const bits=[];
+    if(pf.window_start) bits.push(`due ${monthName(pf.window_start)}–${monthName(pf.window_end)}`);
+    if((pf.excluded_departments||[]).length) bits.push(`excl ${pf.excluded_departments.join(', ')}`);
+    if(pf.filtered_out) bits.push(`${pf.filtered_out} trimmed`);
+    stamp += ` · showing ${bits.join(' · ')}`;
+  }
+  $('#stamp').textContent = stamp;
+  const errs = STATE.errors||[];
+  const banner=$('#errBanner');
+  if(errs.length){
+    banner.style.display='';
+    banner.innerHTML = `<b>${errs.length} board(s) couldn’t sync</b> — the rest are up to date. `
+      + errs.map(e=>esc(e)).join(' · ')
+      + ` &nbsp;<span style="opacity:.8">Fix the mapping in Manage boards.</span>`;
+  }else{
+    banner.style.display='none';
+  }
+  render();
+}
+
+// ---- filter wiring ----
+['fPerson','fDept','fBoard','fState','fComments','fDue','fSearch','fHideDone'].forEach(id=>{
+  $('#'+id).addEventListener('input',render);
+});
+$('#clearBtn').onclick=()=>{
+  ['fPerson','fDept','fBoard','fState','fComments','fDue','fSearch'].forEach(id=>$('#'+id).value='');
+  $('#fHideDone').checked=true;
+  hiddenStatuses.clear();
+  if(statusMenuBuilt){
+    $('#statusMenu').querySelectorAll('input').forEach(cb=>cb.checked=true);
+    updateStatusBtn(STATE.statuses||[]);
+  }
+  render();
+};
+document.querySelectorAll('thead th').forEach(th=>th.onclick=()=>{
+  const k=th.dataset.k; sort.dir = sort.k===k? -sort.dir : 1; sort.k=k; render();
+});
+
+// ---- sync ----
+$('#syncBtn').onclick=async e=>{
+  const b=e.target; const old=b.textContent; b.disabled=true; b.innerHTML='<span class="spin"></span>Syncing';
+  try{ const r=await api.sync(); if(r.error) throw new Error(r.error); await load(); }
+  catch(err){ alert('Sync failed: '+err.message); }
+  finally{ b.disabled=false; b.textContent=old; }
+};
+
+// ---- manage boards modal ----
+const openModal=id=>$('#'+id).classList.add('open');
+const closeModal=id=>$('#'+id).classList.remove('open');
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=e=>e.target.closest('.overlay').classList.remove('open'));
+document.querySelectorAll('.overlay').forEach(o=>o.onclick=e=>{
+  if(o.id==='tokenModal') return;            // must connect before dismissing
+  if(e.target===o)o.classList.remove('open');
+});
+
+$('#manageBtn').onclick=()=>{ renderTracked(); openModal('manageModal'); };
+function renderTracked(){
+  const list=$('#trackedList');
+  if(!STATE.tracked.length){ list.innerHTML='<p class="hint">No boards tracked yet.</p>'; return; }
+  list.innerHTML = STATE.tracked.map(b=>`
+    <div class="tracked-item">
+      <div><b>${esc(b.name)}</b> <span class="meta">#${b.id}</span></div>
+      <div>
+        <button class="btn ghost" style="padding:5px 10px;font-size:12px" onclick="editMap('${b.id}')">Edit mapping</button>
+        <button class="link" onclick="removeBoard('${b.id}')">Remove</button>
+      </div>
+    </div>`).join('');
+}
+async function removeBoard(id){
+  if(!confirm('Stop tracking this board? Its tasks are removed from the dashboard right away.')) return;
+  await api.removeBoard(id);
+  await load();          // refresh table + filters from the pruned data
+  renderTracked();
+}
+
+// ---- column mapping ----
+let mapCtx = null;
+$('#loadColsBtn').onclick=async ()=>{
+  const id=$('#newBoardId').value.trim();
+  if(!id){ showMsg('manageMsg','Enter a board ID.','err'); return; }
+  await beginMapping(id);
+};
+async function editMap(id){ await beginMapping(id); }
+
+async function beginMapping(id){
+  showMsg('manageMsg','<span class="spin"></span>Fetching columns…','ok');
+  const board = await api.columns(id);
+  if(board.error){ showMsg('manageMsg',board.error,'err'); return; }
+  $('#manageMsg').style.display='none';
+
+  const existing = STATE.tracked.find(b=>b.id===String(id));
+  const savedMap = existing?.mapping||{};
+  const savedDone = existing?.done_labels;
+  mapCtx = {id:String(id), name:board.name, columns:board.columns};
+
+  $('#mapTitle').textContent = `Map columns · ${board.name}`;
+  $('#mapRows').innerHTML = board.columns.map(col=>{
+    // Nothing is guessed. When editing an existing board the column keeps the
+    // role you saved before; otherwise it starts on 'ignore'. Your picks are
+    // never changed for you — not on open, not when you touch another row.
+    let sel = 'ignore';
+    for(const [role,cid] of Object.entries(savedMap)){
+      const ids = Array.isArray(cid) ? cid : [cid];   // person is a list
+      if(ids.includes(col.id)) sel=role;
+    }
+    const opts = ROLE_OPTS.map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');
+    return `<div class="map-row">
+      <div><div class="cname">${esc(col.title)}</div><div class="ctype">${esc(col.type)}</div></div>
+      <select data-col="${col.id}">${opts}</select>
+    </div>`;
+  }).join('');
+
+  $('#doneLabels').value = savedDone ? savedDone.join(', ') : '';
+  closeModal('manageModal'); openModal('mapModal');
+}
+
+$('#saveMapBtn').onclick=async ()=>{
+  const mapping={};
+  const dupes=[];
+  document.querySelectorAll('#mapRows select').forEach(s=>{
+    const v=s.value;
+    if(v==='ignore') return;
+    if(MULTI_ROLES.includes(v)){
+      (mapping[v]=mapping[v]||[]).push(s.dataset.col);   // pool multiple columns
+    }else{
+      if(mapping[v]!==undefined) dupes.push(v);
+      mapping[v]=s.dataset.col;
+    }
+  });
+  if(dupes.length){
+    const names={title:'Title',due_date:'Due date',status:'Status',department:'Department'};
+    const list=[...new Set(dupes)].map(d=>names[d]||d).join(', ');
+    showMsg('mapMsg',`Two columns are both set to: ${list}. That role can only be on one column — change one of them. (Owner / Person is the exception — you can map several.)`,'err');
+    return;
+  }
+  if(!mapping.due_date || !mapping.status){
+    showMsg('mapMsg','Map at least a Due date and a Status column for overdue tracking to work.','err');
+    return;
+  }
+  const done_labels = $('#doneLabels').value.split(',').map(s=>s.trim()).filter(Boolean);
+  await api.saveBoard({id:mapCtx.id, name:mapCtx.name, columns:mapCtx.columns, mapping, done_labels});
+  closeModal('mapModal');
+  $('#newBoardId').value='';
+  // Pull fresh data straight away so newly-mapped columns (e.g. Department)
+  // appear without a separate manual refresh.
+  showMsg('manageMsg',`<span class="spin"></span>Saved “${mapCtx.name}” — pulling latest from Monday…`,'ok');
+  try{
+    const r = await api.sync();
+    if(r.error) throw new Error(r.error);
+    await load();
+    showMsg('manageMsg',`Saved and synced “${mapCtx.name}”.`,'ok');
+  }catch(err){
+    STATE = await api.data();
+    showMsg('manageMsg',`Saved “${mapCtx.name}”, but the sync failed: ${err.message}. Try Refresh from Monday.`,'err');
+  }
+  renderTracked(); openModal('manageModal');
+};
+
+function showMsg(id,html,cls){ const m=$('#'+id); m.className='msg '+cls; m.innerHTML=html; }
+
+// ---- first-run token flow ----
+$('#saveTokenBtn').onclick=async e=>{
+  const t=$('#tokenInput').value.trim();
+  if(!t){ showMsg('tokenMsg','Paste your token first.','err'); return; }
+  const b=e.target, old=b.textContent; b.disabled=true; b.innerHTML='<span class="spin"></span>Checking';
+  try{
+    const r=await api.saveToken(t);
+    if(r.error) throw new Error(r.error);
+    showMsg('tokenMsg','Connected'+(r.user?` as ${r.user}`:'')+'. Loading…','ok');
+    closeModal('tokenModal');
+    await load();
+  }catch(err){ showMsg('tokenMsg',err.message,'err'); }
+  finally{ b.disabled=false; b.textContent=old; }
+};
+// allow Enter to submit the token
+$('#tokenInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#saveTokenBtn').click(); });
+
+async function boot(){
+  const {has_token}=await api.tokenStatus();
+  if(!has_token){
+    // token modal is non-dismissable (no backdrop close, no cancel) until connected
+    $('#tokenModal').classList.add('open');
+    return;
+  }
+  await load();
+}
+boot();
+</script>
+
+<footer>
+  <div class="footer-left"><svg viewBox="0 0 139 47" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logo-title-foot" class="paramount-logo"><title id="logo-title-foot">Paramount Digital</title><g><path class="logo-tile tile-1" d="M2.14973 24.2673H7.69928C8.82722 24.2673 9.74163 25.1829 9.74163 26.3124V31.9093C9.74163 33.0388 8.82722 33.9544 7.69928 33.9544H2.14973C1.0218 33.9544 0.107422 33.0388 0.107422 31.9093V26.3124C0.107422 25.1829 1.0218 24.2673 2.14973 24.2673Z" fill="#01C6A3" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-2" d="M19.728 36.3229H14.1786C13.0506 36.3229 12.1362 37.2385 12.1362 38.368V43.9653C12.1362 45.0948 13.0506 46.0105 14.1786 46.0105H19.728C20.856 46.0105 21.7704 45.0948 21.7704 43.9653V38.368C21.7704 37.2385 20.856 36.3229 19.728 36.3229Z" fill="#008475" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-3" d="M19.728 24.2672H14.1786C13.0506 24.2672 12.1362 25.1829 12.1362 26.3124V31.9096C12.1362 33.0392 13.0506 33.9548 14.1786 33.9548H19.728C20.856 33.9548 21.7704 33.0392 21.7704 31.9096V26.3124C21.7704 25.1829 20.856 24.2672 19.728 24.2672Z" fill="#01C6A3" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-4" d="M19.728 12.2115H14.1786C13.0506 12.2115 12.1362 13.1271 12.1362 14.2567V19.8539C12.1362 20.9834 13.0506 21.8991 14.1786 21.8991H19.728C20.856 21.8991 21.7704 20.9834 21.7704 19.8539V14.2567C21.7704 13.1271 20.856 12.2115 19.728 12.2115Z" fill="#E8A828" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-5" d="M31.7183 0.155762H26.1688C25.0409 0.155762 24.1265 1.07142 24.1265 2.20093V7.7982C24.1265 8.92771 25.0409 9.84337 26.1688 9.84337H31.7183C32.8462 9.84337 33.7606 8.92771 33.7606 7.7982V2.20093C33.7606 1.07142 32.8462 0.155762 31.7183 0.155762Z" fill="#DA1A50" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-6" d="M31.7183 12.2115H26.1688C25.0409 12.2115 24.1265 13.1271 24.1265 14.2567V19.8539C24.1265 20.9834 25.0409 21.8991 26.1688 21.8991H31.7183C32.8462 21.8991 33.7606 20.9834 33.7606 19.8539V14.2567C33.7606 13.1271 32.8462 12.2115 31.7183 12.2115Z" fill="#E8A828" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-7" d="M31.7183 24.2672H26.1688C25.0409 24.2672 24.1265 25.1829 24.1265 26.3124V31.9096C24.1265 33.0392 25.0409 33.9548 26.1688 33.9548H31.7183C32.8462 33.9548 33.7606 33.0392 33.7606 31.9096V26.3124C33.7606 25.1829 32.8462 24.2672 31.7183 24.2672Z" fill="#01C6A3" stroke="#DEDEDE" stroke-width="0.238183"></path><path class="logo-tile tile-8" d="M31.7183 36.3229H26.1688C25.0409 36.3229 24.1265 37.2385 24.1265 38.368V43.9653C24.1265 45.0948 25.0409 46.0105 26.1688 46.0105H31.7183C32.8462 46.0105 33.7606 45.0948 33.7606 43.9653V38.368C33.7606 37.2385 32.8462 36.3229 31.7183 36.3229Z" fill="#008475" stroke="#DEDEDE" stroke-width="0.238183"></path><path d="M51.9001 4.78326C51.9001 5.59526 51.7055 6.35649 51.3161 7.06698C50.9412 7.77748 50.3426 8.35022 49.5206 8.78521C48.7131 9.2202 47.6892 9.43766 46.4489 9.43766H43.918V15.2667H40.8896V0.0853271H46.4489C47.6171 0.0853271 48.6121 0.288325 49.4341 0.694319C50.2561 1.10031 50.869 1.65856 51.2728 2.36904C51.691 3.07954 51.9001 3.88428 51.9001 4.78326ZM46.3191 6.97999C47.1556 6.97999 47.7757 6.79149 48.1795 6.41449C48.5833 6.02299 48.7851 5.47926 48.7851 4.78326C48.7851 3.30429 47.9631 2.5648 46.3191 2.5648H43.918V6.97999H46.3191Z" fill="currentColor"></path><path d="M51.8574 9.81983C51.8574 8.78632 52.0593 7.8697 52.4632 7.06995C52.8793 6.2702 53.436 5.65501 54.1335 5.22437C54.8433 4.79374 55.6325 4.57843 56.5014 4.57843C57.2601 4.57843 57.9209 4.73222 58.4838 5.03982C59.0589 5.34741 59.5178 5.73498 59.8605 6.20252V4.74453H62.4486V14.9689H59.8605V13.4741C59.53 13.9539 59.0712 14.3538 58.4838 14.6737C57.9086 14.9813 57.2417 15.1351 56.4831 15.1351C55.6264 15.1351 54.8433 14.9136 54.1335 14.4707C53.436 14.0278 52.8793 13.4064 52.4632 12.6067C52.0593 11.7946 51.8574 10.8657 51.8574 9.81983ZM59.8605 9.85679C59.8605 9.22925 59.7381 8.69405 59.4933 8.25111C59.2486 7.79587 58.9182 7.45136 58.5022 7.21759C58.0861 6.97152 57.6395 6.84848 57.1622 6.84848C56.685 6.84848 56.2444 6.96536 55.8406 7.19913C55.4368 7.4329 55.1063 7.77741 54.8494 8.23265C54.6047 8.67559 54.4823 9.20467 54.4823 9.81983C54.4823 10.4351 54.6047 10.9764 54.8494 11.4439C55.1063 11.8992 55.4368 12.2498 55.8406 12.4959C56.2567 12.742 56.6971 12.8651 57.1622 12.8651C57.6395 12.8651 58.0861 12.7481 58.5022 12.5144C58.9182 12.2683 59.2486 11.9238 59.4933 11.4808C59.7381 11.0256 59.8605 10.4842 59.8605 9.85679Z" fill="currentColor"></path><path d="M70.0645 9.81983C70.0645 8.78632 70.2664 7.8697 70.6702 7.06995C71.0863 6.2702 71.6431 5.65501 72.3406 5.22437C73.0503 4.79374 73.8396 4.57843 74.7084 4.57843C75.4671 4.57843 76.1279 4.73222 76.6909 5.03982C77.266 5.34741 77.7249 5.73498 78.0675 6.20252V4.74453H80.6556V14.9689H78.0675V13.4741C77.7371 13.9539 77.2782 14.3538 76.6909 14.6737C76.1157 14.9813 75.4488 15.1351 74.6901 15.1351C73.8335 15.1351 73.0503 14.9136 72.3406 14.4707C71.6431 14.0278 71.0863 13.4064 70.6702 12.6067C70.2664 11.7946 70.0645 10.8657 70.0645 9.81983ZM78.0675 9.85679C78.0675 9.22925 77.9451 8.69405 77.7004 8.25111C77.4556 7.79587 77.1252 7.45136 76.7092 7.21759C76.2931 6.97152 75.8465 6.84848 75.3692 6.84848C74.892 6.84848 74.4514 6.96536 74.0476 7.19913C73.6438 7.4329 73.3134 7.77741 73.0565 8.23265C72.8117 8.67559 72.6893 9.20467 72.6893 9.81983C72.6893 10.4351 72.8117 10.9764 73.0565 11.4439C73.3134 11.8992 73.6438 12.2498 74.0476 12.4959C74.4637 12.742 74.9043 12.8651 75.3692 12.8651C75.8465 12.8651 76.2931 12.7481 76.7092 12.5144C77.1252 12.2683 77.4556 11.9238 77.7004 11.4808C77.9451 11.0256 78.0675 10.4842 78.0675 9.85679Z" fill="currentColor"></path><path d="M81.5464 28.8716C81.5464 27.8307 81.7497 26.9075 82.1565 26.102C82.5754 25.2965 83.1362 24.6769 83.8388 24.2431C84.5537 23.8094 85.3486 23.5925 86.2236 23.5925C86.9878 23.5925 87.6534 23.7474 88.2203 24.0572C88.7996 24.367 89.2617 24.7574 89.6069 25.2283V23.7598H92.2138V34.0577H89.6069V32.5521C89.2741 33.0354 88.8118 33.4381 88.2203 33.7603C87.641 34.0701 86.9693 34.225 86.2051 34.225C85.3424 34.225 84.5537 34.0019 83.8388 33.5558C83.1362 33.1097 82.5754 32.4839 82.1565 31.6784C81.7497 30.8605 81.5464 29.925 81.5464 28.8716ZM89.6069 28.9088C89.6069 28.2768 89.4836 27.7377 89.2371 27.2916C88.9906 26.8331 88.6578 26.4861 88.2388 26.2507C87.8197 26.0028 87.3699 25.8789 86.8892 25.8789C86.4085 25.8789 85.9648 25.9966 85.5581 26.232C85.1514 26.4675 84.8186 26.8145 84.5598 27.273C84.3133 27.7191 84.19 28.2519 84.19 28.8716C84.19 29.4912 84.3133 30.0364 84.5598 30.5073C84.8186 30.9658 85.1514 31.3191 85.5581 31.5669C85.9771 31.8147 86.4209 31.9386 86.8892 31.9386C87.3699 31.9386 87.8197 31.821 88.2388 31.5855C88.6578 31.3376 88.9906 30.9907 89.2371 30.5446C89.4836 30.086 89.6069 29.5407 89.6069 28.9088Z" fill="currentColor"></path><path d="M46.1876 19.0687C47.7571 19.0687 49.1338 19.3771 50.318 19.994C51.5165 20.6108 52.4367 21.493 53.0787 22.6406C53.735 23.7739 54.0631 25.0937 54.0631 26.5999C54.0631 28.1062 53.735 29.4259 53.0787 30.5592C52.4367 31.6781 51.5165 32.546 50.318 33.1629C49.1338 33.7797 47.7571 34.0881 46.1876 34.0881H40.9658V19.0687H46.1876ZM46.0806 31.5275C47.65 31.5275 48.8627 31.0971 49.7188 30.2364C50.5748 29.3757 51.0028 28.1636 51.0028 26.5999C51.0028 25.0363 50.5748 23.817 49.7188 22.9419C48.8627 22.0525 47.65 21.6078 46.0806 21.6078H43.9619V31.5275H46.0806Z" fill="currentColor"></path><path d="M105.143 15.1351C104.163 15.1351 103.282 14.9198 102.5 14.4891C101.716 14.0462 101.098 13.4248 100.646 12.6251C100.206 11.8254 99.9844 10.9025 99.9844 9.85679C99.9844 8.81093 100.211 7.88814 100.664 7.0884C101.129 6.28865 101.759 5.67347 102.555 5.24283C103.35 4.79989 104.237 4.57843 105.216 4.57843C106.195 4.57843 107.082 4.79989 107.878 5.24283C108.673 5.67347 109.297 6.28865 109.75 7.0884C110.215 7.88814 110.447 8.81093 110.447 9.85679C110.447 10.9025 110.209 11.8254 109.732 12.6251C109.267 13.4248 108.63 14.0462 107.823 14.4891C107.027 14.9198 106.134 15.1351 105.143 15.1351ZM105.143 12.8835C105.608 12.8835 106.042 12.7728 106.446 12.5512C106.862 12.3175 107.193 11.973 107.437 11.5178C107.682 11.0625 107.804 10.5088 107.804 9.85679C107.804 8.88475 107.547 8.14038 107.034 7.62361C106.532 7.09456 105.914 6.83002 105.18 6.83002C104.445 6.83002 103.828 7.09456 103.326 7.62361C102.836 8.14038 102.591 8.88475 102.591 9.85679C102.591 10.8288 102.83 11.5793 103.307 12.1084C103.797 12.6251 104.409 12.8835 105.143 12.8835Z" fill="currentColor"></path><path d="M121.033 4.74457V14.969H118.445V13.6772C118.115 14.12 117.68 14.4707 117.142 14.7291C116.616 14.9752 116.041 15.0982 115.416 15.0982C114.621 15.0982 113.917 14.9322 113.306 14.5999C112.694 14.2554 112.21 13.7571 111.855 13.105C111.512 12.4406 111.342 11.6532 111.342 10.7426V4.74457H113.911V10.3735C113.911 11.1856 114.113 11.8131 114.517 12.256C114.921 12.6866 115.471 12.902 116.169 12.902C116.878 12.902 117.435 12.6866 117.84 12.256C118.243 11.8131 118.445 11.1856 118.445 10.3735V4.74457H121.033Z" fill="currentColor"></path><path d="M127.875 4.59692C129.086 4.59692 130.065 4.98449 130.812 5.75963C131.558 6.52247 131.931 7.59289 131.931 8.97092V14.969H129.361V9.32154C129.361 8.50953 129.16 7.88819 128.756 7.45755C128.352 7.01462 127.802 6.79315 127.104 6.79315C126.394 6.79315 125.831 7.01462 125.415 7.45755C125.012 7.88819 124.809 8.50953 124.809 9.32154V14.969H122.24V4.74457H124.809V6.01801C125.152 5.57508 125.587 5.23057 126.113 4.98449C126.651 4.72611 127.238 4.59692 127.875 4.59692Z" fill="currentColor"></path><path d="M136.334 6.86697V11.8131C136.334 12.1576 136.413 12.4098 136.572 12.5698C136.743 12.7174 137.025 12.7912 137.417 12.7912H138.609V14.969H136.994C134.828 14.969 133.745 13.9109 133.745 11.7947V6.86697H132.534V4.74456H133.745V2.21613H136.334V4.74456H138.609V6.86697H136.334Z" fill="currentColor"></path><path d="M94.7518 4.59692C96.0001 4.59692 97.0038 4.98449 97.7628 5.75963C98.5337 6.52247 98.9191 7.59289 98.9191 8.97092V14.969H96.3494V9.32154C96.3494 8.52183 96.1472 7.91279 95.7437 7.49447C95.3394 7.06384 94.7888 6.84851 94.0911 6.84851C93.3943 6.84851 92.8374 7.06384 92.4213 7.49447C92.0169 7.91279 91.8156 8.52183 91.8156 9.32154V14.969H89.2455V9.32154C89.2455 8.52183 89.0436 7.91279 88.6397 7.49447C88.2359 7.06384 87.6852 6.84851 86.9878 6.84851C86.278 6.84851 85.7152 7.06384 85.2991 7.49447C84.8952 7.91279 84.6933 8.52183 84.6933 9.32154V14.969H82.1235V4.74457H84.6933V5.9811C85.0238 5.55046 85.4459 5.21211 85.9598 4.96604C86.4861 4.71996 87.0612 4.59692 87.6853 4.59692C88.4807 4.59692 89.1904 4.76918 89.8145 5.11368C90.4383 5.44589 90.9221 5.92573 91.265 6.55323C91.5954 5.96264 92.072 5.48895 92.6966 5.13214C93.3329 4.77533 94.018 4.59692 94.7518 4.59692Z" fill="currentColor"></path><path d="M66.4863 6.33176C66.8166 5.79039 67.245 5.36591 67.7711 5.05832C68.3096 4.75072 68.9214 4.59692 69.6067 4.59692V7.30991H68.9275C68.1199 7.30991 67.508 7.50062 67.092 7.88203C66.6882 8.26346 66.4863 8.92786 66.4863 9.87523V14.969H63.9165V4.74457H66.4863V6.33176Z" fill="currentColor"></path><path d="M57.9638 23.7598V34.0577H55.3755V23.7598H57.9638Z" fill="currentColor"></path><path d="M73.618 23.7598V34.0577H71.0298V23.7598H73.618Z" fill="currentColor"></path><path d="M96.2801 20.3025V34.0578H93.6924V20.3025H96.2801Z" fill="currentColor"></path><path d="M78.6657 25.8974V30.8792C78.6657 31.2261 78.7458 31.4801 78.9061 31.6412C79.0786 31.79 79.362 31.8643 79.7565 31.8643H80.9581V34.0577H79.3313C77.1498 34.0577 76.059 32.992 76.059 30.8606V25.8974H74.8389V23.7598H76.059V21.2133H78.6657V23.7598H80.9581V25.8974H78.6657Z" fill="currentColor"></path><path d="M63.86 23.5925C64.6241 23.5925 65.2958 23.7474 65.875 24.0572C66.4543 24.3547 66.9104 24.745 67.2431 25.2283V23.7598H69.8499V34.1321C69.8499 35.0863 69.6588 35.9351 69.2767 36.6787C68.8947 37.4346 68.3215 38.0294 67.5574 38.4631C66.7932 38.9092 65.8689 39.1323 64.7843 39.1323C63.33 39.1323 62.1345 38.7915 61.1978 38.1099C60.2734 37.4283 59.7496 36.499 59.6263 35.3217H62.1961C62.3317 35.7926 62.6213 36.1644 63.065 36.437C63.521 36.722 64.0695 36.8645 64.7104 36.8645C65.4622 36.8645 66.0722 36.6353 66.5406 36.1768C67.0089 35.7306 67.2431 35.0491 67.2431 34.1321V32.5335C66.9104 33.0168 66.4482 33.4195 65.8566 33.7417C65.2773 34.0639 64.6117 34.225 63.86 34.225C62.9972 34.225 62.2084 34.0019 61.4935 33.5558C60.7787 33.1097 60.2118 32.4839 59.7928 31.6784C59.386 30.8605 59.1826 29.925 59.1826 28.8716C59.1826 27.8307 59.386 26.9075 59.7928 26.102C60.2118 25.2965 60.7725 24.6769 61.475 24.2431C62.1899 23.8094 62.9849 23.5925 63.86 23.5925ZM67.2431 28.9088C67.2431 28.2768 67.1199 27.7377 66.8734 27.2916C66.6269 26.8331 66.2941 26.4861 65.875 26.2507C65.456 26.0028 65.0062 25.8789 64.5255 25.8789C64.0448 25.8789 63.6011 25.9966 63.1944 26.232C62.7877 26.4675 62.4549 26.8145 62.1961 27.273C61.9496 27.7191 61.8263 28.2519 61.8263 28.8716C61.8263 29.4912 61.9496 30.0364 62.1961 30.5073C62.4549 30.9658 62.7877 31.3191 63.1944 31.5669C63.6135 31.8147 64.0571 31.9386 64.5255 31.9386C65.0062 31.9386 65.456 31.821 65.875 31.5855C66.2941 31.3376 66.6269 30.9907 66.8734 30.5446C67.1199 30.086 67.2431 29.5407 67.2431 28.9088Z" fill="currentColor"></path><path d="M57.6674 19.893H55.6718C55.5082 19.893 55.3755 20.0259 55.3755 20.1897V22.2368C55.3755 22.4007 55.5082 22.5336 55.6718 22.5336H57.6674C57.8311 22.5336 57.9637 22.4007 57.9637 22.2368V20.1897C57.9637 20.0259 57.8311 19.893 57.6674 19.893Z" fill="currentColor"></path><path d="M73.3217 19.893H71.3261C71.1624 19.893 71.0298 20.0259 71.0298 20.1897V22.2368C71.0298 22.4007 71.1624 22.5336 71.3261 22.5336H73.3217C73.4854 22.5336 73.618 22.4007 73.618 22.2368V20.1897C73.618 20.0259 73.4854 19.893 73.3217 19.893Z" fill="currentColor"></path></g></svg><span class="footer-text">Board Watch</span></div>
+  <span class="footer-text">Task tracking for Monday.com · Paramount Digital</span>
+</footer>
+</div>
+</body>
+</html>

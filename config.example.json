@@ -3,6 +3,6 @@
   "api_version": "2025-07",
   "warning_days": 3,
   "lookback_months": 4,
-  "excluded_departments": ["PPC", "Paid Social"],
+  "excluded_departments": ["PPC", "Paid Social", "Comms", "Development"],
   "monday_account": "paramount-digital-ltd"
 }

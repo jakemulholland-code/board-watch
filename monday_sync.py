@@ -26,6 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, "data")
 BOARDS_FILE = os.path.join(DATA_DIR, "boards.json")
 TASKS_FILE = os.path.join(DATA_DIR, "tasks.json")
+PROGRESS_FILE = os.path.join(DATA_DIR, "sync_progress.json")
 CONFIG_FILE = os.path.join(HERE, "config.json")
 ENV_FILE = os.path.join(HERE, ".env")
 ENV_KEY = "MONDAY_API_TOKEN"
@@ -105,6 +106,17 @@ def save_json(path, obj):
         json.dump(obj, f, indent=2, ensure_ascii=False)
 
 
+def write_progress(data):
+    """Snapshot of an in-progress (or just-finished) sync, polled by the
+    browser to drive the progress bar. Not meant to be durable state — just
+    the latest status."""
+    save_json(PROGRESS_FILE, data)
+
+
+def read_progress():
+    return load_json(PROGRESS_FILE, {"status": "idle"})
+
+
 def load_dotenv():
     """Read simple KEY=VALUE lines from .env into os.environ (without overriding
     variables already set in the real environment)."""
@@ -156,7 +168,7 @@ def load_settings():
     #  - excluded_departments: drop tasks whose Department is in this list
     #    (case-insensitive). Tasks with no due date are always kept.
     cfg.setdefault("lookback_months", 4)
-    cfg.setdefault("excluded_departments", ["PPC", "Paid Social"])
+    cfg.setdefault("excluded_departments", ["PPC", "Paid Social", "Comms", "Development"])
     # Your Monday account slug — the "yourcompany" in yourcompany.monday.com.
     # Used to build "Open in Monday" links straight to each item.
     cfg.setdefault("monday_account", "paramount-digital-ltd")
@@ -327,8 +339,10 @@ def fetch_board_columns(cfg, board_id):
     return boards[0]
 
 
-def fetch_board_items(cfg, board_id):
-    """Fetch all items on a board, paginating with cursor."""
+def fetch_board_items(cfg, board_id, on_page=None):
+    """Fetch all items on a board, paginating with cursor. If given, on_page(n)
+    is called after each page with the number of items that page added —
+    used to drive the sync progress bar without needing the total up front."""
     items = []
     cursor = None
     q = """
@@ -358,10 +372,27 @@ def fetch_board_items(cfg, board_id):
             break
         page = boards[0]["items_page"]
         items.extend(page["items"])
+        if on_page:
+            on_page(len(page["items"]))
         cursor = page.get("cursor")
         if not cursor:
             break
     return items
+
+
+def fetch_items_count(cfg, board_ids):
+    """Cheap upfront item counts for a set of boards, used only to size the
+    sync progress bar/ETA. Best-effort by design — callers should tolerate
+    this failing (e.g. via try/except) and fall back to an indeterminate bar
+    rather than letting a progress-only query fail the whole sync."""
+    if not board_ids:
+        return {}
+    q = """
+    query ($ids: [ID!]) {
+      boards (ids: $ids) { id items_count }
+    }"""
+    data = monday_query(cfg, q, {"ids": [str(b) for b in board_ids]})
+    return {b["id"]: b.get("items_count") or 0 for b in (data.get("boards") or [])}
 
 
 # --------------------------------------------------------------------------
@@ -619,6 +650,7 @@ def cmd_sync(cfg):
     # an empty cache — so removing every board leaves nothing stale behind.
     if not store["boards"]:
         save_json(TASKS_FILE, empty_tasks())
+        write_progress({"status": "idle"})
         print("No boards tracked — cleared task cache.")
         return
 
@@ -629,6 +661,27 @@ def cmd_sync(cfg):
     out_tasks = []
     errors = []
     filtered_out = 0
+
+    boards_list = list(store["boards"].values())
+
+    # Best-effort upfront item counts, purely to size the progress bar/ETA —
+    # a failure here (e.g. a transient API hiccup) must not fail the sync
+    # itself, so it just falls back to an indeterminate bar.
+    try:
+        items_total = sum(fetch_items_count(cfg, [b["id"] for b in boards_list]).values())
+    except (SystemExit, Exception):  # noqa: BLE001
+        items_total = None
+
+    progress = {
+        "status": "running",
+        "boards_total": len(boards_list),
+        "boards_done": 0,
+        "current_board": boards_list[0]["name"] if boards_list else None,
+        "items_total": items_total,
+        "items_done": 0,
+        "started_at": datetime.datetime.now().isoformat(timespec="seconds"),
+    }
+    write_progress(progress)
 
     def keep(task):
         # drop excluded departments
@@ -641,14 +694,21 @@ def cmd_sync(cfg):
                 return False
         return True
 
-    for board in store["boards"].values():
+    for idx, board in enumerate(boards_list):
+        progress["current_board"] = board["name"]
+        write_progress(progress)
         # One board's bad mapping or API hiccup must not sink the whole sync.
         try:
             m = board.get("mapping") or {}
             if not m.get("due_date") or not m.get("status"):
                 raise ValueError("mapping is missing a Due date and/or Status column")
             done_labels = [d.lower() for d in board.get("done_labels", ["done"])]
-            items = fetch_board_items(cfg, board["id"])
+
+            def on_page(n):
+                progress["items_done"] += n
+                write_progress(progress)
+
+            items = fetch_board_items(cfg, board["id"], on_page=on_page)
             for it in items:
                 task = process_item(it, m, done_labels, board, today, warn)
                 if keep(task):
@@ -659,6 +719,9 @@ def cmd_sync(cfg):
             msg = f"{board.get('name', board.get('id'))}: {e}"
             errors.append(msg)
             print(f"  ! skipped board {board.get('id')} — {e}")
+        finally:
+            progress["boards_done"] = idx + 1
+            write_progress(progress)
 
     result = {
         "generated_at": datetime.datetime.now().isoformat(timespec="seconds"),
@@ -679,7 +742,10 @@ def cmd_sync(cfg):
             "filtered_out": filtered_out,
         },
     }
-    save_json(TASKS_FILE, result)   # full replace — old data is wiped
+    try:
+        save_json(TASKS_FILE, result)   # full replace — old data is wiped
+    finally:
+        write_progress({"status": "done", "finished_at": datetime.datetime.now().isoformat(timespec="seconds")})
     counts = {}
     for t in out_tasks:
         counts[t["state"]] = counts.get(t["state"], 0) + 1

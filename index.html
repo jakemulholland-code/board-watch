@@ -219,6 +219,48 @@
   .tracked-item{display:flex;align-items:center;justify-content:space-between;
     padding:.7rem .9rem;background:var(--surface3);border:1px solid var(--line);border-radius:10px;margin-bottom:.5rem}
   .tracked-item .meta{color:var(--muted2);font-size:.62rem;letter-spacing:.03em}
+  .import-export{display:flex;align-items:center;justify-content:space-between;gap:1.2rem;
+    margin-top:1.2rem;padding-top:1.1rem;border-top:1px solid var(--line)}
+  .ie-label{font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.3rem}
+  .bulk-textarea{width:100%;background:var(--surface2);border:1px solid var(--line2);color:var(--text);
+    font-family:var(--sans);font-size:.84rem;padding:.6rem .8rem;border-radius:9px;outline:none;resize:vertical;transition:border-color .14s}
+  .bulk-textarea:focus{border-color:var(--teal);background:#fff}
+  .bulk-row{display:flex;gap:.7rem;align-items:flex-start;padding:.7rem .2rem;border-bottom:1px solid var(--line)}
+  .bulk-row:last-child{border-bottom:none}
+  .bulk-row input[type=checkbox]{accent-color:var(--teal-dark);width:15px;height:15px;margin-top:.15rem;flex:none}
+  .bulk-row.bulk-row-err{color:var(--muted2)}
+  .bulk-row .meta{color:var(--muted2);font-size:.68rem}
+  .mp-chip.mp-warn{color:var(--warning);background:var(--warning-bg);border-color:rgba(180,122,0,.25)}
+
+  /* ---- sync progress ---- */
+  .sync-progress{height:3px;background:var(--line);overflow:hidden;position:relative;display:none}
+  .sync-progress.on{display:block}
+  .sync-progress-fill{height:100%;background:var(--teal);width:0%;transition:width .4s ease}
+  .sync-progress-fill.indeterminate{width:28%;position:absolute;animation:sync-indet 1.3s ease-in-out infinite}
+  @keyframes sync-indet{0%{left:-28%}100%{left:100%}}
+  .sync-progress-text{font-size:.72rem;color:var(--muted);padding:.45rem 2.5rem;background:var(--surface3);
+    border-bottom:1px solid var(--line)}
+
+  /* ---- activity log ---- */
+  #activityBtn{position:relative}
+  #activityBtn.has-new::after{content:'';position:absolute;top:5px;right:6px;width:7px;height:7px;
+    border-radius:50%;background:var(--red);animation:pulse 1.4s infinite}
+  .activity-drawer{display:none;flex-direction:column;position:fixed;right:1.2rem;bottom:1.2rem;
+    width:min(420px,calc(100vw - 2.4rem));max-height:min(420px,60vh);background:#fff;border:1px solid var(--line);
+    border-radius:14px;box-shadow:0 20px 50px rgba(16,24,40,.2);z-index:400;overflow:hidden}
+  .activity-drawer.open{display:flex}
+  .activity-head{display:flex;align-items:center;justify-content:space-between;padding:.75rem .95rem;
+    border-bottom:1px solid var(--line);background:var(--surface3);font-size:.68rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:none}
+  .activity-body{overflow:auto;padding:.4rem .5rem;font-family:var(--mono);font-size:.72rem;line-height:1.6;flex:1}
+  .log-line{padding:.32rem .5rem;border-radius:6px;display:flex;gap:.55rem;align-items:baseline}
+  .log-line:hover{background:var(--surface3)}
+  .log-time{color:var(--muted2);flex:none;font-size:.66rem}
+  .log-text{word-break:break-word}
+  .log-ok .log-text{color:var(--teal-dark)}
+  .log-err .log-text{color:var(--red);font-weight:500}
+  .log-pending .log-text{color:var(--muted)}
+  .log-empty{color:var(--muted2);font-style:italic;padding:.5rem}
   .link{color:var(--red);background:none;border:none;font-size:.72rem;padding:.25rem .4rem;font-weight:600}
   .link:hover{text-decoration:underline}
   .msg{font-size:.76rem;padding:.6rem .85rem;border-radius:9px;margin-top:.7rem;display:none;font-weight:400;line-height:1.5}
@@ -259,9 +301,24 @@
   <div class="spacer"></div>
   <span class="topbar-label">Board Watch</span>
   <div class="topbar-dot"></div>
+  <button class="btn ghost" id="activityBtn">Activity log</button>
   <button class="btn ghost" id="manageBtn">Manage boards</button>
   <button class="btn primary" id="syncBtn">Refresh from Monday</button>
 </header>
+
+<div class="sync-progress" id="syncProgressBar"><div class="sync-progress-fill" id="syncProgressFill"></div></div>
+<div class="sync-progress-text" id="syncProgressText" style="display:none"></div>
+
+<div class="activity-drawer" id="activityDrawer">
+  <div class="activity-head">
+    <span>Activity log</span>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="link" id="activityClearBtn" style="color:var(--muted)">Clear</button>
+      <button class="btn ghost" data-close-activity style="padding:.3rem .65rem;font-size:.62rem">Close</button>
+    </div>
+  </div>
+  <div class="activity-body" id="activityList"></div>
+</div>
 
 <section class="hero">
   <div class="hero-inner">
@@ -411,14 +468,32 @@
   <div class="modal">
     <header><h2>Tracked boards</h2></header>
     <div class="body">
-      <p class="hint">Add a board by its numeric ID (found in the board's URL on monday.com).
-        Columns are mapped once and saved, so boards with different layouts all work.</p>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input type="text" id="newBoardId" placeholder="e.g. 1234567890" style="flex:1">
+      <p class="hint">Add a board by its numeric ID or by pasting its monday.com URL —
+        e.g. https://yourcompany.monday.com/boards/1234567890. Columns are mapped once and saved,
+        so boards with different layouts all work.</p>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="newBoardId" placeholder="board ID or monday.com board URL" style="flex:1">
         <button class="btn primary" id="loadColsBtn">Add & map</button>
+      </div>
+      <div style="margin-bottom:16px">
+        <button class="link" id="openBulkBtn" style="padding:0;color:var(--teal-dark)">Adding several boards? Bulk add by ID →</button>
       </div>
       <div id="trackedList"></div>
       <div class="msg" id="manageMsg"></div>
+
+      <div class="import-export">
+        <div>
+          <div class="ie-label">Board setups</div>
+          <p class="hint" style="margin-bottom:0">Save your boards + mappings to a file, or drop one back in — handy
+            after pulling an update, or moving to a new machine. Import adds/updates boards by ID; it never removes
+            boards you already have tracked.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex:none">
+          <button class="btn ghost" id="exportBoardsBtn">Export</button>
+          <button class="btn ghost" id="importBoardsBtn">Import</button>
+          <input type="file" id="importBoardsFile" accept="application/json,.json" style="display:none">
+        </div>
+      </div>
     </div>
     <div class="foot">
       <button class="btn ghost" data-close>Close</button>
@@ -457,24 +532,184 @@
       <div class="msg" id="mapMsg"></div>
     </div>
     <div class="foot">
-      <button class="btn ghost" data-close>Cancel</button>
+      <button class="btn ghost" id="cancelMapBtn">Cancel</button>
       <button class="btn primary" id="saveMapBtn">Save mapping</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk add modal -->
+<div class="overlay" id="bulkModal">
+  <div class="modal" style="max-width:760px">
+    <header><h2>Bulk add boards</h2></header>
+    <div class="body">
+      <p class="hint">Paste board IDs or full monday.com board URLs — one per line, or separated by commas or
+        spaces. Each is checked against the <b>Default</b> mapping preset so you can confirm the guesses look right
+        before adding them all. Anything already tracked is unticked by default, since adding it here would
+        overwrite its saved mapping.</p>
+      <textarea id="bulkIds" class="bulk-textarea" rows="4" placeholder="1234567890, 2345678901&#10;https://yourcompany.monday.com/boards/3456789012"></textarea>
+      <div style="display:flex;justify-content:flex-end;margin:.7rem 0 1.1rem">
+        <button class="btn primary" id="bulkFetchBtn">Fetch & preview</button>
+      </div>
+      <div id="bulkRows"></div>
+      <div class="msg" id="bulkMsg"></div>
+    </div>
+    <div class="foot">
+      <button class="btn ghost" data-close>Cancel</button>
+      <button class="btn primary" id="bulkAddBtn" disabled>Add boards</button>
     </div>
   </div>
 </div>
 
 <script>
 const $ = s => document.querySelector(s);
-const api = {
-  data:      () => fetch('/api/data').then(r=>r.json()),
-  columns:   id => fetch('/api/board-columns?id='+encodeURIComponent(id)).then(r=>r.json()),
-  saveBoard: b  => fetch('/api/save-board',{method:'POST',body:JSON.stringify(b)}).then(r=>r.json()),
-  removeBoard:id=> fetch('/api/remove-board',{method:'POST',body:JSON.stringify({id})}).then(r=>r.json()),
-  sync:      () => fetch('/api/sync',{method:'POST'}).then(r=>r.json()),
-  tokenStatus:()=> fetch('/api/token-status').then(r=>r.json()),
-  saveToken: t  => fetch('/api/save-token',{method:'POST',body:JSON.stringify({token:t})}).then(r=>r.json()),
-  postUpdate: (item_id,text,mentions)=> fetch('/api/post-update',{method:'POST',body:JSON.stringify({item_id,text,mentions})}).then(r=>r.json()),
+
+// ---- activity log ----
+// A running, timestamped trace of every request the browser fires and how it
+// resolved — so a click always has an immediate, visible "yes, that started"
+// / "yes, that finished" instead of a silent wait on the network.
+let activityLog = [];
+function logAct(text, level){
+  const time = new Date().toLocaleTimeString([], {hour12:false});
+  activityLog.push({time, text, level: level || 'info'});
+  if(activityLog.length > 300) activityLog.shift();
+  renderActivity();
+  if(!$('#activityDrawer').classList.contains('open')) $('#activityBtn').classList.add('has-new');
+}
+function renderActivity(){
+  const list = $('#activityList');
+  list.innerHTML = activityLog.length
+    ? activityLog.slice().reverse().map(e=>
+        `<div class="log-line log-${e.level}"><span class="log-time">${e.time}</span><span class="log-text">${esc(e.text)}</span></div>`
+      ).join('')
+    : '<div class="log-empty">No activity yet — actions you take will show up here as they happen.</div>';
+}
+$('#activityBtn').onclick=()=>{
+  $('#activityDrawer').classList.toggle('open');
+  if($('#activityDrawer').classList.contains('open')) $('#activityBtn').classList.remove('has-new');
 };
+document.querySelectorAll('[data-close-activity]').forEach(b=>b.onclick=()=>$('#activityDrawer').classList.remove('open'));
+$('#activityClearBtn').onclick=()=>{ activityLog=[]; renderActivity(); };
+renderActivity();
+
+// Every api.* call logs "label…" the instant it fires (before the network
+// round-trip even starts), then logs the outcome once it resolves — so
+// there's always an immediate response to a click, not just a result after
+// the fact.
+async function call(label, url, opts){
+  logAct(`${label}…`, 'pending');
+  const t0 = performance.now();
+  try{
+    const res = await fetch(url, opts);
+    const json = await res.json();
+    const ms = Math.round(performance.now()-t0);
+    if(json && json.error) logAct(`✗ ${label} — ${json.error}`, 'err');
+    else logAct(`✓ ${label} (${ms}ms)`, 'ok');
+    return json;
+  }catch(err){
+    logAct(`✗ ${label} — ${err.message}`, 'err');
+    throw err;
+  }
+}
+
+const api = {
+  data:      () => call('Loading dashboard data', '/api/data'),
+  columns:   id => call(`Fetching columns for board ${id}`, '/api/board-columns?id='+encodeURIComponent(id)),
+  saveBoard: b  => call(`Saving board "${b.name||b.id}"`, '/api/save-board',{method:'POST',body:JSON.stringify(b)}),
+  removeBoard:id=> call(`Removing board ${id}`, '/api/remove-board',{method:'POST',body:JSON.stringify({id})}),
+  exportBoards:()=> call('Exporting boards', '/api/export-boards'),
+  importBoards:store=> call('Importing boards', '/api/import-boards',{method:'POST',body:JSON.stringify(store)}),
+  sync:      () => call('Syncing from Monday', '/api/sync',{method:'POST'}),
+  tokenStatus:()=> call('Checking token status', '/api/token-status'),
+  saveToken: t  => call('Saving API token', '/api/save-token',{method:'POST',body:JSON.stringify({token:t})}),
+  postUpdate: (item_id,text,mentions)=> call(`Posting update to item ${item_id}`, '/api/post-update',{method:'POST',body:JSON.stringify({item_id,text,mentions})}),
+};
+
+// Makes a button visibly react the instant it's clicked — disabled + a
+// spinner + a busy label — regardless of how long the actual work takes, so
+// a click never feels like it did nothing. Restores whatever the button
+// showed before, success or failure.
+// Appended to any "pulling latest from Monday" status message. The progress
+// bar and Activity log both sit behind the modal's full-screen backdrop while
+// it's open, so they're invisible right when people most want reassurance —
+// this note substitutes for that until the modal stops blocking them.
+const SYNCING_NOTE = '<br><span style="opacity:.75;font-size:.92em">This can take a few minutes for large boards. '
+  + 'Close this dialog to watch the live progress bar, or close this browser tab entirely — either way the sync '
+  + 'keeps running and your boards will be ready when you come back.</span>';
+
+// ---- sync progress ----
+// Polls /api/sync-progress while a sync is in flight and drives a top-of-page
+// progress bar + text readout, so a slow real pull (which can take minutes on
+// a big board) never looks like nothing is happening. Percentage/ETA are only
+// ever shown when Monday actually gave us real numbers to work with — items
+// counted up front via fetch_items_count, items_done as pages come back — so
+// this is a genuine gauge, not a fake animation. Falls back to an
+// indeterminate bar + elapsed time when that count isn't available.
+function fmtEta(sec){
+  if(sec==null || !isFinite(sec) || sec<0) return 'estimating time remaining…';
+  if(sec<5) return 'almost done';
+  if(sec<90) return `~${Math.round(sec)}s remaining`;
+  return `~${Math.round(sec/60)}m remaining`;
+}
+async function pollSyncProgress(){
+  let p;
+  try{ p = await fetch('/api/sync-progress').then(r=>r.json()); }
+  catch(err){ return; }
+  if(!p || p.status!=='running'){ return; }
+  const bar = $('#syncProgressBar'), fill = $('#syncProgressFill'), text = $('#syncProgressText');
+  bar.classList.add('on'); text.style.display='';
+  const elapsed = p.started_at ? (Date.now() - new Date(p.started_at).getTime())/1000 : null;
+  let pct = null, eta = null;
+  if(p.items_total){
+    pct = Math.max(0, Math.min(99, Math.round(100*(p.items_done||0)/p.items_total)));
+    if(p.items_done>0 && elapsed>0){
+      const rate = p.items_done/elapsed;
+      eta = rate>0 ? (p.items_total-p.items_done)/rate : null;
+    }
+  }
+  if(pct!=null){ fill.classList.remove('indeterminate'); fill.style.width=pct+'%'; }
+  else{ fill.classList.add('indeterminate'); fill.style.width=''; }
+  const boardBit = p.boards_total>1 ? `board ${Math.min((p.boards_done||0)+1,p.boards_total)}/${p.boards_total}${p.current_board?` (${esc(p.current_board)})`:''} · ` : (p.current_board ? `${esc(p.current_board)} · `:'');
+  const itemBit = p.items_total ? `${(p.items_done||0).toLocaleString()}/${p.items_total.toLocaleString()} items` : `${(p.items_done||0).toLocaleString()} items so far`;
+  text.textContent = `Syncing — ${boardBit}${itemBit} · ${fmtEta(eta)}`;
+}
+async function runSyncWithProgress(){
+  pollSyncProgress();
+  const timer = setInterval(pollSyncProgress, 700);
+  try{
+    return await api.sync();
+  }finally{
+    clearInterval(timer);
+    $('#syncProgressBar').classList.remove('on');
+    $('#syncProgressFill').classList.remove('indeterminate');
+    $('#syncProgressFill').style.width='0%';
+    $('#syncProgressText').style.display='none';
+  }
+}
+
+// Accepts either a bare board ID or a full monday.com board URL (e.g.
+// https://yourcompany.monday.com/boards/1234567890/...) and returns just the
+// numeric ID. Falls back to the trimmed input unchanged if nothing matches,
+// so a bad paste still shows a sensible "board not found" error downstream
+// rather than silently swallowing it.
+function extractBoardId(raw){
+  const s = (raw || '').trim();
+  const urlMatch = s.match(/\/boards\/(\d+)/);
+  if(urlMatch) return urlMatch[1];
+  if(/^\d+$/.test(s)) return s;
+  const anyDigits = s.match(/(\d{5,})/);
+  return anyDigits ? anyDigits[1] : s;
+}
+
+function withBusy(btn, busyLabel, fn){
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span>${busyLabel}`;
+  return (async ()=>{
+    try{ return await fn(); }
+    finally{ btn.disabled = false; btn.innerHTML = old; }
+  })();
+}
 
 let STATE = {tasks:[], boards:[], people:[], tracked:[]};
 let sort = {k:'due_date', dir:1};
@@ -826,7 +1061,7 @@ document.querySelectorAll('thead th').forEach(th=>th.onclick=()=>{
 // ---- sync ----
 $('#syncBtn').onclick=async e=>{
   const b=e.target; const old=b.textContent; b.disabled=true; b.innerHTML='<span class="spin"></span>Syncing';
-  try{ const r=await api.sync(); if(r.error) throw new Error(r.error); await load(); }
+  try{ const r=await runSyncWithProgress(); if(r.error) throw new Error(r.error); await load(); }
   catch(err){ alert('Sync failed: '+err.message); }
   finally{ b.disabled=false; b.textContent=old; }
 };
@@ -837,8 +1072,18 @@ const closeModal=id=>$('#'+id).classList.remove('open');
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=e=>e.target.closest('.overlay').classList.remove('open'));
 document.querySelectorAll('.overlay').forEach(o=>o.onclick=e=>{
   if(o.id==='tokenModal') return;            // must connect before dismissing
-  if(e.target===o)o.classList.remove('open');
+  if(e.target!==o) return;
+  if(o.id==='mapModal'){ closeMapModal(); return; }
+  o.classList.remove('open');
 });
+
+// Dismissing the mapping modal while it's mid bulk-add "Fix mapping" returns
+// to the bulk modal instead of leaving nothing open.
+function closeMapModal(){
+  closeModal('mapModal');
+  if(mapCtx && mapCtx.bulkIndex !== undefined) openModal('bulkModal');
+}
+$('#cancelMapBtn').onclick = closeMapModal;
 
 $('#manageBtn').onclick=()=>{ renderTracked(); openModal('manageModal'); };
 function renderTracked(){
@@ -848,26 +1093,185 @@ function renderTracked(){
     <div class="tracked-item">
       <div><b>${esc(b.name)}</b> <span class="meta">#${b.id}</span></div>
       <div>
-        <button class="btn ghost" style="padding:5px 10px;font-size:12px" onclick="editMap('${b.id}')">Edit mapping</button>
-        <button class="link" onclick="removeBoard('${b.id}')">Remove</button>
+        <button class="btn ghost" style="padding:5px 10px;font-size:12px" onclick="editMap('${b.id}',this)">Edit mapping</button>
+        <button class="link" onclick="removeBoard('${b.id}',this)">Remove</button>
       </div>
     </div>`).join('');
 }
-async function removeBoard(id){
+function removeBoard(id, btn){
   if(!confirm('Stop tracking this board? Its tasks are removed from the dashboard right away.')) return;
-  await api.removeBoard(id);
-  await load();          // refresh table + filters from the pruned data
-  renderTracked();
+  return withBusy(btn,'Removing…', async ()=>{
+    await api.removeBoard(id);
+    await load();          // refresh table + filters from the pruned data
+    renderTracked();
+  });
 }
+
+// ---- export / import board setups ----
+$('#exportBoardsBtn').onclick=()=> withBusy($('#exportBoardsBtn'),'Exporting…', async ()=>{
+  const store = await api.exportBoards();
+  if(!Object.keys(store.boards||{}).length){
+    showMsg('manageMsg','No tracked boards to export yet.','err');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(store,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `board-watch-boards-${stamp}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showMsg('manageMsg',`Exported ${Object.keys(store.boards).length} board(s).`,'ok');
+});
+
+$('#importBoardsBtn').onclick=()=>$('#importBoardsFile').click();
+$('#importBoardsFile').onchange=e=>{
+  const file = e.target.files[0];
+  e.target.value = '';   // allow re-selecting the same file next time
+  if(!file) return;
+  withBusy($('#importBoardsBtn'),'Importing…', async ()=>{
+    let parsed;
+    try{
+      parsed = JSON.parse(await file.text());
+    }catch(err){
+      showMsg('manageMsg',`Couldn't read "${file.name}" — it's not valid JSON.`,'err');
+      return;
+    }
+    showMsg('manageMsg','<span class="spin"></span>Importing…','ok');
+    const r = await api.importBoards(parsed);
+    if(r.error){ showMsg('manageMsg',r.error,'err'); return; }
+    const bits=[];
+    if(r.added) bits.push(`${r.added} added`);
+    if(r.updated) bits.push(`${r.updated} updated`);
+    if(r.skipped) bits.push(`${r.skipped} skipped (malformed)`);
+    const summary = bits.length ? `Import done — ${bits.join(', ')}.` : 'Import file had nothing usable in it.';
+    if(!r.added && !r.updated){ await load(); renderTracked(); showMsg('manageMsg',summary,'err'); return; }
+    // Pull fresh data for the imported boards right away, same as after saving
+    // a single board's mapping — otherwise they'd sit tracked-but-empty until
+    // the next manual refresh.
+    showMsg('manageMsg',`${summary} Pulling latest from Monday…${SYNCING_NOTE}`,'ok');
+    try{
+      const sr = await runSyncWithProgress();
+      if(sr.error) throw new Error(sr.error);
+      await load();
+      showMsg('manageMsg',`${summary} Synced.`,'ok');
+    }catch(err){
+      await load();
+      showMsg('manageMsg',`${summary} Sync failed: ${err.message}. Try Refresh from Monday.`,'err');
+    }
+    renderTracked();
+  });
+};
+
+// ---- bulk add ----
+let bulkResults = [];
+$('#openBulkBtn').onclick=()=>{
+  $('#bulkIds').value='';
+  $('#bulkRows').innerHTML='';
+  $('#bulkMsg').style.display='none';
+  $('#bulkAddBtn').disabled=true;
+  bulkResults=[];
+  closeModal('manageModal'); openModal('bulkModal');
+};
+
+$('#bulkFetchBtn').onclick=()=> withBusy($('#bulkFetchBtn'),'Fetching…', async ()=>{
+  const ids=[...new Set($('#bulkIds').value.split(/[\s,]+/).map(s=>extractBoardId(s)).filter(Boolean))];
+  if(!ids.length){ showMsg('bulkMsg','Enter at least one board ID or URL.','err'); return; }
+  $('#bulkAddBtn').disabled=true;
+  $('#bulkRows').innerHTML='';
+  showMsg('bulkMsg',`<span class="spin"></span>Fetching ${ids.length} board(s)…`,'ok');
+  bulkResults = await Promise.all(ids.map(async id=>{
+    try{
+      const board = await api.columns(id);
+      if(board.error) return {id, error: board.error};
+      return {id, name: board.name, columns: board.columns, mapping: board.suggested_mapping||{},
+              mappingMode:'default', doneLabels:['done']};
+    }catch(err){ return {id, error: err.message||'Failed to fetch.'}; }
+  }));
+  renderBulkRows();
+  const ok = bulkResults.filter(r=>!r.error);
+  $('#bulkAddBtn').disabled = !ok.length;
+  showMsg('bulkMsg',
+    `Fetched ${ok.length}/${bulkResults.length}. Review the mapping preview below, tick the ones you want, then Add boards.`,
+    ok.length ? 'ok' : 'err');
+});
+
+function renderBulkRows(){
+  const trackedIds = new Set(STATE.tracked.map(b=>String(b.id)));
+  $('#bulkRows').innerHTML = bulkResults.map((r,i)=>{
+    if(r.error){
+      return `<div class="bulk-row bulk-row-err"><div><b>#${esc(r.id)}</b> — ${esc(r.error)}</div></div>`;
+    }
+    const alreadyTracked = trackedIds.has(String(r.id));
+    const missingCore = !r.mapping.due_date || !r.mapping.status;
+    const byRole={};
+    for(const [role,cid] of Object.entries(r.mapping)){
+      const ids = Array.isArray(cid)?cid:[cid];
+      byRole[role]=ids.map(id=>(r.columns.find(c=>c.id===id)||{}).title||id);
+    }
+    const warn = alreadyTracked
+      ? `<span class="mp-chip mp-warn">Already tracked — adding will overwrite its saved mapping</span>`
+      : (missingCore ? `<span class="mp-chip mp-warn">Missing Due date and/or Status — fix it below before adding</span>` : '');
+    return `<div class="bulk-row">
+      <input type="checkbox" data-bulk-id="${esc(r.id)}" ${alreadyTracked?'':'checked'}>
+      <div style="flex:1">
+        <div class="cname" style="display:flex;align-items:center;justify-content:space-between;gap:.6rem">
+          <span>${esc(r.name)} <span class="meta">#${esc(r.id)}</span></span>
+          <button type="button" class="btn ${missingCore?'primary':'ghost'}" style="padding:.3rem .65rem;font-size:.6rem;flex:none" onclick="openBulkFix(${i})">Fix mapping</button>
+        </div>
+        <div class="map-preview" style="margin:.4rem 0 0">${roleChipsHtml(byRole)}${warn}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Lets a bulk-fetched board's mapping be corrected (e.g. missing Due date /
+// Status) in the same mapping modal used for single-board mapping — without
+// touching the backend yet. Saving here only updates bulkResults[index];
+// the actual board doesn't get written until "Add boards" runs.
+function openBulkFix(index){
+  const r = bulkResults[index];
+  const ctx = {id:String(r.id), name:r.name, columns:r.columns, suggested:r.mapping,
+               mode:r.mappingMode||'custom', bulkIndex:index};
+  renderMapModal(ctx, r.mapping, r.doneLabels);
+  closeModal('bulkModal'); openModal('mapModal');
+}
+
+$('#bulkAddBtn').onclick=()=> withBusy($('#bulkAddBtn'),'Adding…', async ()=>{
+  const checked = new Set(Array.from(document.querySelectorAll('#bulkRows input[type=checkbox]:checked')).map(cb=>cb.dataset.bulkId));
+  const toAdd = bulkResults.filter(r=>!r.error && checked.has(r.id));
+  if(!toAdd.length){ showMsg('bulkMsg','Nothing selected to add.','err'); return; }
+  showMsg('bulkMsg',`<span class="spin"></span>Adding ${toAdd.length} board(s)…`,'ok');
+  for(const [i,r] of toAdd.entries()){
+    showMsg('bulkMsg',`<span class="spin"></span>Adding board ${i+1}/${toAdd.length} — "${esc(r.name)}"…`,'ok');
+    await api.saveBoard({id:r.id, name:r.name, columns:r.columns, mapping:r.mapping,
+                          mapping_mode:r.mappingMode||'default', done_labels:r.doneLabels||['done']});
+  }
+  closeModal('bulkModal');
+  openModal('manageModal');
+  showMsg('manageMsg',`<span class="spin"></span>Added ${toAdd.length} board(s) — pulling latest from Monday…${SYNCING_NOTE}`,'ok');
+  try{
+    const sr = await runSyncWithProgress();
+    if(sr.error) throw new Error(sr.error);
+    await load();
+    showMsg('manageMsg',`Added and synced ${toAdd.length} board(s).`,'ok');
+  }catch(err){
+    await load();
+    showMsg('manageMsg',`Added ${toAdd.length} board(s), but sync failed: ${err.message}. Try Refresh from Monday.`,'err');
+  }
+  renderTracked();
+});
 
 // ---- column mapping ----
 let mapCtx = null;
-$('#loadColsBtn').onclick=async ()=>{
-  const id=$('#newBoardId').value.trim();
-  if(!id){ showMsg('manageMsg','Enter a board ID.','err'); return; }
+$('#loadColsBtn').onclick=()=> withBusy($('#loadColsBtn'),'Loading…', async ()=>{
+  const id=extractBoardId($('#newBoardId').value);
+  if(!id){ showMsg('manageMsg','Enter a board ID or URL.','err'); return; }
   await beginMapping(id);
-};
-async function editMap(id){ await beginMapping(id); }
+});
+function editMap(id, btn){
+  return btn ? withBusy(btn,'Loading…', ()=>beginMapping(id)) : beginMapping(id);
+}
 
 function applyMappingToRows(mapping){
   document.querySelectorAll('#mapRows select').forEach(s=>{
@@ -900,6 +1304,22 @@ function setMapMode(mode){
   $('#modeCustomBtn').classList.toggle('on', mode==='custom');
 }
 
+const ROLE_LABELS = [
+  ['title','Title'],['person','Owner / Person'],['due_date','Due date'],
+  ['status','Status'],['department','Department'],
+];
+
+// Shared by the single-board mapping preview and the bulk-add preview:
+// `byRole` is {role: [column title, ...]}; renders one chip per role.
+function roleChipsHtml(byRole){
+  return ROLE_LABELS.map(([role,label])=>{
+    const cols = (byRole[role]||[]).map(esc);
+    return cols.length
+      ? `<span class="mp-chip"><b>${label}</b> ← ${cols.join(', ')}</span>`
+      : `<span class="mp-chip mp-empty">${label} — unmapped</span>`;
+  }).join('');
+}
+
 function renderMapPreview(){
   // Shows every column currently pointed at each role, even a duplicate on a
   // unique role Save would reject — so a conflict is visible here first.
@@ -908,39 +1328,19 @@ function renderMapPreview(){
     if(s.value==='ignore') return;
     (byRole[s.value]=byRole[s.value]||[]).push(s.closest('.map-row').querySelector('.cname').textContent);
   });
-  const labels = [
-    ['title','Title'],['person','Owner / Person'],['due_date','Due date'],
-    ['status','Status'],['department','Department'],
-  ];
-  $('#mapPreview').innerHTML = labels.map(([role,label])=>{
-    const cols = (byRole[role]||[]).map(esc);
-    return cols.length
-      ? `<span class="mp-chip"><b>${label}</b> ← ${cols.join(', ')}</span>`
-      : `<span class="mp-chip mp-empty">${label} — unmapped</span>`;
-  }).join('');
+  $('#mapPreview').innerHTML = roleChipsHtml(byRole);
 }
 
-async function beginMapping(id){
-  showMsg('manageMsg','<span class="spin"></span>Fetching columns…','ok');
-  const board = await api.columns(id);
-  if(board.error){ showMsg('manageMsg',board.error,'err'); return; }
-  $('#manageMsg').style.display='none';
-
-  const existing = STATE.tracked.find(b=>b.id===String(id));
-  const savedMap = existing?.mapping;
-  const savedDone = existing?.done_labels;
-  const suggested = board.suggested_mapping || {};
-  // New boards start on the Default preset; a board mapped before this toggle
-  // existed falls back to Custom so its saved mapping is never silently
-  // overwritten by the guess.
-  const savedMode = existing?.mapping_mode || (existing ? 'custom' : 'default');
-  mapCtx = {id:String(id), name:board.name, columns:board.columns, suggested, mode:savedMode};
-
-  $('#mapTitle').textContent = `Map columns · ${board.name}`;
-  const startMap = (savedMode==='default') ? suggested : (savedMap||{});
-  $('#mapRows').innerHTML = board.columns.map(col=>{
+// Shared by the single-board mapping flow and the bulk-add "Fix mapping"
+// flow: paints #mapRows/#mapPreview/#doneLabels for a given board context and
+// starting mapping, and wires the mode-switch behavior. Does not touch the
+// backend or open/close any modal — callers handle that.
+function renderMapModal(ctx, startMap, doneLabelsArr){
+  mapCtx = ctx;
+  $('#mapTitle').textContent = `Map columns · ${ctx.name}`;
+  $('#mapRows').innerHTML = ctx.columns.map(col=>{
     let sel = 'ignore';
-    for(const [role,cid] of Object.entries(startMap)){
+    for(const [role,cid] of Object.entries(startMap||{})){
       const ids = Array.isArray(cid) ? cid : [cid];
       if(ids.includes(col.id)) sel=role;
     }
@@ -960,10 +1360,28 @@ async function beginMapping(id){
     });
   });
 
-  setMapMode(savedMode);
+  setMapMode(ctx.mode);
   renderMapPreview();
+  $('#doneLabels').value = (doneLabelsArr && doneLabelsArr.length) ? doneLabelsArr.join(', ') : 'Done';
+}
 
-  $('#doneLabels').value = savedDone ? savedDone.join(', ') : 'Done';
+async function beginMapping(id){
+  showMsg('manageMsg','<span class="spin"></span>Fetching columns…','ok');
+  const board = await api.columns(id);
+  if(board.error){ showMsg('manageMsg',board.error,'err'); return; }
+  $('#manageMsg').style.display='none';
+
+  const existing = STATE.tracked.find(b=>b.id===String(id));
+  const savedMap = existing?.mapping;
+  const savedDone = existing?.done_labels;
+  const suggested = board.suggested_mapping || {};
+  // New boards start on the Default preset; a board mapped before this toggle
+  // existed falls back to Custom so its saved mapping is never silently
+  // overwritten by the guess.
+  const savedMode = existing?.mapping_mode || (existing ? 'custom' : 'default');
+  const ctx = {id:String(id), name:board.name, columns:board.columns, suggested, mode:savedMode};
+  const startMap = (savedMode==='default') ? suggested : (savedMap||{});
+  renderMapModal(ctx, startMap, savedDone);
   closeModal('manageModal'); openModal('mapModal');
 }
 
@@ -979,7 +1397,7 @@ $('#modeCustomBtn').onclick=()=>{
   setMapMode('custom');
 };
 
-$('#saveMapBtn').onclick=async ()=>{
+$('#saveMapBtn').onclick=()=> withBusy($('#saveMapBtn'),'Saving…', async ()=>{
   const mapping = readRowMapping();
   const dupes=[];
   const seen=new Set();
@@ -999,14 +1417,29 @@ $('#saveMapBtn').onclick=async ()=>{
     return;
   }
   const done_labels = $('#doneLabels').value.split(',').map(s=>s.trim()).filter(Boolean);
+
+  if(mapCtx.bulkIndex !== undefined){
+    // Bulk "Fix mapping" — only updates the in-memory row; the actual save
+    // happens later, all together, when "Add boards" runs.
+    const r = bulkResults[mapCtx.bulkIndex];
+    r.mapping = mapping;
+    r.mappingMode = mapCtx.mode;
+    r.doneLabels = done_labels;
+    closeModal('mapModal');
+    openModal('bulkModal');
+    renderBulkRows();
+    showMsg('bulkMsg', `Updated mapping for "${esc(r.name)}".`, 'ok');
+    return;
+  }
+
   await api.saveBoard({id:mapCtx.id, name:mapCtx.name, columns:mapCtx.columns, mapping, mapping_mode:mapCtx.mode, done_labels});
   closeModal('mapModal');
   $('#newBoardId').value='';
   // Pull fresh data straight away so newly-mapped columns (e.g. Department)
   // appear without a separate manual refresh.
-  showMsg('manageMsg',`<span class="spin"></span>Saved “${mapCtx.name}” — pulling latest from Monday…`,'ok');
+  showMsg('manageMsg',`<span class="spin"></span>Saved “${mapCtx.name}” — pulling latest from Monday…${SYNCING_NOTE}`,'ok');
   try{
-    const r = await api.sync();
+    const r = await runSyncWithProgress();
     if(r.error) throw new Error(r.error);
     await load();
     showMsg('manageMsg',`Saved and synced “${mapCtx.name}”.`,'ok');
@@ -1015,7 +1448,7 @@ $('#saveMapBtn').onclick=async ()=>{
     showMsg('manageMsg',`Saved “${mapCtx.name}”, but the sync failed: ${err.message}. Try Refresh from Monday.`,'err');
   }
   renderTracked(); openModal('manageModal');
-};
+});
 
 function showMsg(id,html,cls){ const m=$('#'+id); m.className='msg '+cls; m.innerHTML=html; }
 

@@ -4,6 +4,7 @@ Local server for the Monday dashboard.
 
 Run:  python server.py
 Then open http://localhost:8765 in your browser.
+The Management (capacity) view is a separate page at /management.
 
 Serves the static dashboard and exposes a tiny JSON API so the browser can:
   - list tracked boards / people / tasks       GET  /api/data
@@ -57,6 +58,9 @@ class Handler(BaseHTTPRequestHandler):
 
         if route in ("/", "/index.html"):
             return self._serve_file("index.html", "text/html")
+
+        if route in ("/management", "/management.html"):
+            return self._serve_file("management.html", "text/html")
 
         if route == "/favicon.svg":
             return self._serve_file("favicon.svg", "image/svg+xml")

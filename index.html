@@ -232,35 +232,6 @@
   .bulk-row .meta{color:var(--muted2);font-size:.68rem}
   .mp-chip.mp-warn{color:var(--warning);background:var(--warning-bg);border-color:rgba(180,122,0,.25)}
 
-  /* ---- management (capacity) view ---- */
-  .mgmt-controls{display:flex;gap:1.2rem;align-items:flex-end;margin-bottom:1.1rem;flex-wrap:wrap}
-  .cap-legend{display:flex;flex-wrap:wrap;gap:.6rem 1rem;margin-bottom:1.2rem}
-  .cap-legend .lg-item{display:flex;align-items:center;gap:.4rem;font-size:.7rem;color:var(--muted);font-weight:500}
-  .cap-legend .lg-swatch{width:10px;height:10px;border-radius:3px;flex:none}
-  .cap-person{margin-bottom:2rem;padding-bottom:1.6rem;border-bottom:1px solid var(--line)}
-  .cap-person:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-  .cap-person-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1rem;gap:1rem;flex-wrap:wrap}
-  .cap-person-name{font-family:var(--serif);font-size:1rem;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:.55rem}
-  .cap-person-total{font-size:.72rem;color:var(--muted);white-space:nowrap}
-  .cap-badges,.cap-labels,.cap-cols{display:flex;gap:.5rem}
-  .cap-badges>div,.cap-labels>div,.cap-col{flex:1;min-width:0;text-align:center}
-  .cap-badges{margin-bottom:.35rem}
-  .cap-badge{font-size:.62rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cap-badge.cap-light{color:var(--muted2)}
-  .cap-badge.cap-ok{color:var(--teal-dark)}
-  .cap-badge.cap-over{color:var(--red)}
-  .cap-plot{position:relative;height:140px}
-  .cap-capline{position:absolute;left:0;right:0;border-top:1.5px dashed var(--muted2)}
-  .cap-capline span{position:absolute;right:0;top:-1.05rem;font-size:.6rem;color:var(--muted2);white-space:nowrap;font-weight:600}
-  .cap-cols{position:absolute;inset:0;align-items:flex-end}
-  .cap-col{cursor:default}
-  .cap-bar-track{width:100%;display:flex;flex-direction:column-reverse;border-radius:4px;overflow:hidden}
-  .cap-seg{width:100%;flex:none}
-  .cap-labels{margin-top:.5rem}
-  .cap-wk-label{font-size:.62rem;color:var(--muted2);white-space:nowrap}
-  .cap-overdue-note{color:var(--red);font-weight:700;font-size:.6rem;white-space:nowrap}
-  .cap-empty{color:var(--muted2);font-style:italic;font-size:.85rem;padding:1.5rem 0;text-align:center}
-
   /* ---- sync progress ---- */
   .sync-progress{height:3px;background:var(--line);overflow:hidden;position:relative;display:none}
   .sync-progress.on{display:block}
@@ -331,7 +302,7 @@
   <span class="topbar-label">Board Watch</span>
   <div class="topbar-dot"></div>
   <button class="btn ghost" id="activityBtn">Activity log</button>
-  <button class="btn ghost" id="managementBtn">Management view</button>
+  <a class="btn ghost" href="/management">Management view</a>
   <button class="btn ghost" id="manageBtn">Manage boards</button>
   <button class="btn primary" id="syncBtn">Refresh from Monday</button>
 </header>
@@ -588,47 +559,6 @@
     <div class="foot">
       <button class="btn ghost" data-close>Cancel</button>
       <button class="btn primary" id="bulkAddBtn" disabled>Add boards</button>
-    </div>
-  </div>
-</div>
-
-<!-- Management (capacity) view -->
-<div class="overlay" id="managementModal">
-  <div class="modal" style="max-width:980px">
-    <header><h2>Management view</h2></header>
-    <div class="body">
-      <p class="hint">Weekly capacity per person, in hours, from each task's <b>Hours</b> column and due date.
-        Overdue open tasks are pulled into the current week. Capacity assumes <b id="capAssumption">7h × 5 days =
-        35h/week</b> per person. Only tasks on a board with an Hours column mapped show up here — done tasks and
-        tasks with no Hours or Due date are left out.</p>
-
-      <div class="mgmt-controls">
-        <div class="field">
-          <label>People</label>
-          <div class="multi">
-            <button type="button" class="multi-btn" id="capPeopleBtn">Select people…</button>
-            <div class="multi-menu" id="capPeopleMenu"></div>
-          </div>
-        </div>
-        <div class="field">
-          <label>Weeks ahead</label>
-          <select id="capWeeks">
-            <option value="4">4 weeks</option>
-            <option value="8" selected>8 weeks</option>
-            <option value="12">12 weeks</option>
-          </select>
-        </div>
-        <label class="chk" style="padding-bottom:.55rem">
-          <input type="checkbox" id="capSplitBoard" checked> Split by board
-        </label>
-      </div>
-
-      <div id="capLegend" class="cap-legend"></div>
-      <div id="capBody"></div>
-      <div class="msg" id="capMsg"></div>
-    </div>
-    <div class="foot">
-      <button class="btn primary" data-close>Close</button>
     </div>
   </div>
 </div>
@@ -1080,10 +1010,7 @@ function updateStatusBtn(statuses){
 }
 $('#statusBtn').onclick=e=>{ e.stopPropagation(); $('#statusMenu').classList.toggle('open'); };
 document.addEventListener('click',e=>{
-  if(!e.target.closest('.multi')){
-    $('#statusMenu').classList.remove('open');
-    $('#capPeopleMenu').classList.remove('open');
-  }
+  if(!e.target.closest('.multi')) $('#statusMenu').classList.remove('open');
 });
 
 // ---- load ----
@@ -1526,211 +1453,6 @@ $('#saveMapBtn').onclick=()=> withBusy($('#saveMapBtn'),'Saving…', async ()=>{
 });
 
 function showMsg(id,html,cls){ const m=$('#'+id); m.className='msg '+cls; m.innerHTML=html; }
-
-// ---- management (capacity) view ----
-const CAP_CHART_H = 140;
-const BOARD_COLOR_PALETTE = ['#01C6A3','#E8A828','#0086c0','#a25ddc','#DA1A50','#797e93','#3ecf8e','#fdab3d'];
-const boardColor = name => {
-  let h=0; for(const c of String(name)) h=(h*31+c.charCodeAt(0))%997;
-  return BOARD_COLOR_PALETTE[h % BOARD_COLOR_PALETTE.length];
-};
-let capSelectedPeople = new Set();
-let capMenuEverBuilt = false;
-
-function mondayOf(dateStr){
-  const d = new Date(dateStr+'T00:00:00');
-  const dow = (d.getDay()+6)%7;   // days since Monday (Mon=0 .. Sun=6)
-  d.setDate(d.getDate()-dow);
-  return d;
-}
-const addDays = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
-const fmtWeekLabel = d => 'w/c '+d.toLocaleDateString(undefined,{day:'numeric',month:'short'});
-
-function loadStatusClass(ratio){
-  if(ratio>1) return 'cap-over';
-  if(ratio<0.4) return 'cap-light';
-  return 'cap-ok';
-}
-
-// Buckets every open, hour-mapped, dated task for the given people into
-// Monday-start weeks starting from this week. Overdue open tasks land in
-// week 0 (this week) rather than being dropped, since they still need doing.
-function computeCapacity(peopleNames, weeksCount){
-  const wk0 = mondayOf(STATE.today);
-  const todayDate = new Date(STATE.today+'T00:00:00');
-  const weeks = [];
-  for(let i=0;i<weeksCount;i++) weeks.push(addDays(wk0, i*7));
-  const perPerson = {};
-  // overdueHours/overdueCount are always 0 outside week 0 — only a task due
-  // before this week even gets clamped into a bucket at all, and clamping
-  // always lands it in week 0.
-  peopleNames.forEach(p=> perPerson[p] = weeks.map(()=>(
-    {total:0, byBoard:{}, overdueHours:0, overdueCount:0, dueHours:0, dueCount:0}
-  )) );
-  const boardsUsed = new Set();
-  let excludedNoHours=0, excludedNoDate=0, excludedBeyond=0;
-
-  (STATE.tasks||[]).forEach(t=>{
-    if(t.is_done) return;
-    if(t.hours==null || t.hours<=0){ excludedNoHours++; return; }
-    if(!t.due_date){ excludedNoDate++; return; }
-    const names = (t.people&&t.people.length) ? t.people : [t.person];
-    const matched = names.filter(n=>perPerson[n]);
-    if(!matched.length) return;
-    const due = new Date(t.due_date+'T00:00:00');
-    let idx = Math.floor((due-wk0)/(7*86400000));
-    if(idx<0) idx=0;
-    if(idx>=weeksCount){ excludedBeyond++; return; }
-    const isOverdue = due < todayDate;
-    matched.forEach(n=>{
-      const bucket = perPerson[n][idx];
-      bucket.total += t.hours;
-      bucket.byBoard[t.board_name] = (bucket.byBoard[t.board_name]||0) + t.hours;
-      boardsUsed.add(t.board_name);
-      if(isOverdue){ bucket.overdueHours += t.hours; bucket.overdueCount++; }
-      else { bucket.dueHours += t.hours; bucket.dueCount++; }
-    });
-  });
-  return {weeks, perPerson, boardsUsed, excludedNoHours, excludedNoDate, excludedBeyond};
-}
-
-function renderCapacityView(){
-  const people = [...capSelectedPeople].sort();
-  const weeksCount = parseInt($('#capWeeks').value,10);
-  const splitBoard = $('#capSplitBoard').checked;
-  const hpd = STATE.hours_per_day||7, dpw = STATE.work_days_per_week||5;
-  const capacityPerWeek = hpd*dpw;
-  $('#capAssumption').textContent = `${hpd}h × ${dpw} days = ${capacityPerWeek}h/week`;
-
-  if(!people.length){
-    $('#capLegend').innerHTML='';
-    $('#capBody').innerHTML = '<div class="cap-empty">Select at least one person above to see their capacity.</div>';
-    $('#capMsg').style.display='none';
-    return;
-  }
-
-  const {weeks, perPerson, boardsUsed, excludedNoHours, excludedNoDate, excludedBeyond} = computeCapacity(people, weeksCount);
-
-  // One shared scale across every selected person, so bar heights are
-  // visually comparable person-to-person, not just within their own chart.
-  let maxTotal = capacityPerWeek;
-  people.forEach(p=> perPerson[p].forEach(b=> maxTotal=Math.max(maxTotal,b.total)) );
-  const scaleMax = maxTotal*1.15;
-  const capPx = Math.round(capacityPerWeek/scaleMax*CAP_CHART_H);
-  const loadColorVar = {'cap-over':'var(--red)','cap-light':'var(--muted2)','cap-ok':'var(--teal)'};
-
-  const boardList = [...boardsUsed].sort();
-  $('#capLegend').innerHTML = (splitBoard && boardList.length)
-    ? boardList.map(b=>`<span class="lg-item"><span class="lg-swatch" style="background:${boardColor(b)}"></span>${esc(b)}</span>`).join('')
-    : '';
-
-  $('#capBody').innerHTML = people.map(p=>{
-    const buckets = perPerson[p];
-    const totalAll = buckets.reduce((s,b)=>s+b.total,0);
-    const avg = totalAll/weeksCount;
-    const badges = buckets.map(b=>{
-      const ratio = b.total/capacityPerWeek;
-      return `<div class="cap-badge ${loadStatusClass(ratio)}">${b.total?b.total.toFixed(1)+'h':''}</div>`;
-    }).join('');
-    const cols = buckets.map((b,i)=>{
-      let segs = '';
-      if(splitBoard){
-        segs = Object.entries(b.byBoard).sort((a,z)=>z[1]-a[1]).map(([bn,h])=>
-          `<div class="cap-seg" style="height:${Math.round(h/scaleMax*CAP_CHART_H)}px;background:${boardColor(bn)}"></div>`).join('');
-      }else if(b.total){
-        const cls = loadStatusClass(b.total/capacityPerWeek);
-        segs = `<div class="cap-seg" style="height:${Math.round(b.total/scaleMax*CAP_CHART_H)}px;background:${loadColorVar[cls]}"></div>`;
-      }
-      const boardBits = Object.entries(b.byBoard).sort((a,z)=>z[1]-a[1]).map(([bn,h])=>`${bn}: ${h.toFixed(1)}h`).join(', ');
-      const overdueBit = b.overdueCount
-        ? ` — of that, ${b.overdueCount} overdue (${b.overdueHours.toFixed(1)}h) vs ${b.dueCount} actually due this week (${b.dueHours.toFixed(1)}h)`
-        : '';
-      const tip = `${fmtWeekLabel(weeks[i])} — ${b.total.toFixed(1)}h${boardBits?' ('+boardBits+')':''}${overdueBit}`;
-      return `<div class="cap-col" title="${esc(tip)}"><div class="cap-bar-track" style="height:${CAP_CHART_H}px">${segs}</div></div>`;
-    }).join('');
-    const labels = weeks.map((w,i)=>{
-      const b = buckets[i];
-      const overdueNote = b.overdueCount
-        ? `<br><span class="cap-overdue-note">${b.overdueCount} overdue (${b.overdueHours.toFixed(1)}h)</span>`
-        : '';
-      return `<div class="cap-wk-label">${fmtWeekLabel(w)}${overdueNote}</div>`;
-    }).join('');
-    return `<div class="cap-person">
-      <div class="cap-person-head">
-        <div class="cap-person-name"><span class="avatar" style="background:${avatarColor(p)}">${initials(p)}</span>${esc(p)}</div>
-        <div class="cap-person-total">Next ${weeksCount}w: ${totalAll.toFixed(1)}h total · avg ${avg.toFixed(1)}h/wk</div>
-      </div>
-      <div class="cap-track">
-        <div class="cap-badges">${badges}</div>
-        <div class="cap-plot">
-          <div class="cap-capline" style="bottom:${capPx}px"><span>${capacityPerWeek}h cap</span></div>
-          <div class="cap-cols">${cols}</div>
-        </div>
-        <div class="cap-labels">${labels}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  const excludedBits=[];
-  if(excludedNoHours) excludedBits.push(`${excludedNoHours} task(s) with no Hours`);
-  if(excludedNoDate) excludedBits.push(`${excludedNoDate} with no Due date`);
-  if(excludedBeyond) excludedBits.push(`${excludedBeyond} due beyond the ${weeksCount}-week window`);
-  if(excludedBits.length) showMsg('capMsg', `Not counted: ${excludedBits.join(', ')}.`, 'ok');
-  else { $('#capMsg').style.display='none'; $('#capMsg').innerHTML=''; }
-}
-
-function updateCapPeopleBtn(){
-  const n = capSelectedPeople.size, all = (STATE.people||[]).length;
-  const btn = $('#capPeopleBtn');
-  if(n===0) btn.textContent='Select people…';
-  else if(n===all) btn.textContent='Everyone';
-  else if(n<=2) btn.textContent=[...capSelectedPeople].join(', ');
-  else btn.textContent=`${n} people`;
-}
-
-function buildCapPeopleMenu(){
-  const menu = $('#capPeopleMenu');
-  const people = STATE.people||[];
-  // First time this ever builds, default to everyone selected — an empty
-  // chart isn't useful. After that, respect whatever the user picked, just
-  // dropping anyone who's no longer in the (possibly refreshed) people list.
-  if(!capMenuEverBuilt) people.forEach(p=>capSelectedPeople.add(p));
-  [...capSelectedPeople].forEach(p=>{ if(!people.includes(p)) capSelectedPeople.delete(p); });
-  capMenuEverBuilt = true;
-
-  menu.innerHTML =
-    `<div class="mm-actions">
-       <button type="button" id="capAll">Select all</button>
-       <button type="button" id="capNone">Clear all</button>
-     </div>` +
-    people.map(p=>`
-      <label class="multi-opt">
-        <input type="checkbox" value="${esc(p)}" ${capSelectedPeople.has(p)?'checked':''}>
-        <span>${esc(p)}</span>
-      </label>`).join('');
-
-  menu.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-    cb.addEventListener('change',()=>{
-      if(cb.checked) capSelectedPeople.add(cb.value); else capSelectedPeople.delete(cb.value);
-      updateCapPeopleBtn(); renderCapacityView();
-    });
-  });
-  $('#capAll').onclick=()=>{ people.forEach(p=>capSelectedPeople.add(p));
-    menu.querySelectorAll('input').forEach(cb=>cb.checked=true); updateCapPeopleBtn(); renderCapacityView(); };
-  $('#capNone').onclick=()=>{ capSelectedPeople.clear();
-    menu.querySelectorAll('input').forEach(cb=>cb.checked=false); updateCapPeopleBtn(); renderCapacityView(); };
-
-  updateCapPeopleBtn();
-}
-
-$('#capPeopleBtn').onclick=e=>{ e.stopPropagation(); $('#capPeopleMenu').classList.toggle('open'); };
-$('#capWeeks').addEventListener('change', renderCapacityView);
-$('#capSplitBoard').addEventListener('change', renderCapacityView);
-$('#managementBtn').onclick=()=>{
-  buildCapPeopleMenu();
-  renderCapacityView();
-  openModal('managementModal');
-};
 
 // ---- first-run token flow ----
 $('#saveTokenBtn').onclick=async e=>{

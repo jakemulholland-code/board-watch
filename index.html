@@ -115,6 +115,23 @@
   .multi-opt:hover{background:var(--surface3)}
   .multi-opt input{accent-color:var(--teal-dark);width:15px;height:15px;flex:none}
   .multi-opt .swatch{width:9px;height:9px;border-radius:3px;flex:none}
+
+  /* searchable single-select filter dropdown ("combo") */
+  .combo{position:relative}
+  .combo-input{background:#fff;border:1px solid var(--line2);color:var(--text);font-family:var(--sans);
+    padding:.55rem 1.8rem .55rem .8rem;border-radius:9px;font-size:.8rem;font-weight:500;min-width:150px;
+    transition:border-color .14s}
+  .combo::after{content:"▾";position:absolute;right:.8rem;top:50%;transform:translateY(-50%);
+    color:var(--muted2);font-size:.7rem;pointer-events:none}
+  .combo-input:focus{outline:none;border-color:var(--teal);color:var(--ink)}
+  .combo-menu{display:none;position:absolute;z-index:120;top:calc(100% + 4px);left:0;min-width:220px;
+    max-height:280px;overflow:auto;background:#fff;border:1px solid var(--line2);
+    border-radius:12px;padding:6px;box-shadow:0 14px 34px rgba(16,24,40,.12)}
+  .combo-menu.open{display:block}
+  .combo-opt{padding:.5rem .6rem;border-radius:7px;font-size:.8rem;cursor:pointer;user-select:none;font-weight:400}
+  .combo-opt:hover,.combo-opt.active{background:var(--surface3)}
+  .combo-opt.combo-empty{color:var(--muted2);font-style:italic;cursor:default}
+  .combo-opt.combo-empty:hover{background:none}
   .btn-secondary,#clearBtn{background:#fff;color:var(--muted);border:1px solid var(--line2);
     padding:.55rem 1.1rem;border-radius:9px;font-size:.7rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
     transition:border-color .14s,color .14s;align-self:flex-end}
@@ -348,19 +365,31 @@
 <section class="filters">
   <div class="field" id="teamField" style="display:none">
     <label>Team</label>
-    <select id="fTeam"><option value="">All teams</option></select>
+    <div class="combo" data-combo="team">
+      <input type="text" class="combo-input" id="fTeamInput" placeholder="All teams" autocomplete="off">
+      <div class="combo-menu" id="fTeamMenu"></div>
+    </div>
   </div>
   <div class="field">
     <label>Person</label>
-    <select id="fPerson"><option value="">Everyone</option></select>
+    <div class="combo" data-combo="person">
+      <input type="text" class="combo-input" id="fPersonInput" placeholder="Everyone" autocomplete="off">
+      <div class="combo-menu" id="fPersonMenu"></div>
+    </div>
   </div>
   <div class="field" id="deptField" style="display:none">
     <label>Department</label>
-    <select id="fDept"><option value="">All departments</option></select>
+    <div class="combo" data-combo="dept">
+      <input type="text" class="combo-input" id="fDeptInput" placeholder="All departments" autocomplete="off">
+      <div class="combo-menu" id="fDeptMenu"></div>
+    </div>
   </div>
   <div class="field">
     <label>Board</label>
-    <select id="fBoard"><option value="">All boards</option></select>
+    <div class="combo" data-combo="board">
+      <input type="text" class="combo-input" id="fBoardInput" placeholder="All boards" autocomplete="off">
+      <div class="combo-menu" id="fBoardMenu"></div>
+    </div>
   </div>
   <div class="field">
     <label>Urgency</label>
@@ -776,6 +805,71 @@ let statusMenuBuilt = false;
 let detailItemId = null;          // item currently open in the detail modal
 let detailMentions = [];          // [{id,name}] assignees available to tag
 
+// ---- searchable single-select filter dropdowns ("combos") ----
+// Team/Person/Department/Board all pick one value from a list that can get
+// long, so instead of a plain <select> each is a text input + a filterable
+// dropdown. comboValue holds the current selection per field; comboOptsFn
+// pulls a fresh {value,label} list from STATE each time the menu opens, so
+// it's never stale after a sync or a team edit.
+const comboValue = {team:'', person:'', dept:'', board:''};
+const comboAllLabel = {team:'All teams', person:'Everyone', dept:'All departments', board:'All boards'};
+const comboOptsFn = {
+  team:   () => Object.values(STATE.teams||{}).map(tm=>({value:tm.id, label:tm.name})),
+  person: () => (STATE.people||[]).map(p=>({value:p, label:p})),
+  dept:   () => (STATE.departments||[]).map(d=>({value:d, label:d})),
+  board:  () => (STATE.boards||[]).map(b=>({value:b.id, label:b.name})),
+};
+const comboFieldId = {team:'fTeam', person:'fPerson', dept:'fDept', board:'fBoard'};
+
+function comboLabel(key){
+  const value = comboValue[key];
+  if(!value) return comboAllLabel[key];
+  const opt = comboOptsFn[key]().find(o=>o.value===value);
+  return opt ? opt.label : value;
+}
+function comboInput(key){ return $('#'+comboFieldId[key]+'Input'); }
+function comboMenu(key){ return $('#'+comboFieldId[key]+'Menu'); }
+
+function openComboMenu(key, query){
+  const menu = comboMenu(key);
+  // On first open there's no typed query yet — the box just displays the
+  // current selection's label (e.g. "All teams"), which must NOT be treated
+  // as a filter or it'd hide every option that doesn't contain that phrase.
+  const q = (query!==undefined ? query : comboInput(key).value).toLowerCase();
+  const allLabel = comboAllLabel[key];
+  const opts = comboOptsFn[key]().filter(o=>o.label.toLowerCase().includes(q));
+  const allMatches = allLabel.toLowerCase().includes(q);
+  const rows = [];
+  if(allMatches) rows.push(`<div class="combo-opt" data-value="">${esc(allLabel)}</div>`);
+  rows.push(...opts.map(o=>`<div class="combo-opt" data-value="${esc(o.value)}">${esc(o.label)}</div>`));
+  menu.innerHTML = rows.length ? rows.join('') : '<div class="combo-opt combo-empty">No matches</div>';
+  menu.querySelectorAll('.combo-opt[data-value]').forEach(el=>{
+    // mousedown+preventDefault (not click) so the input never blurs before
+    // the selection registers — the usual combobox trick.
+    el.addEventListener('mousedown', e=>{ e.preventDefault(); chooseCombo(key, el.dataset.value); });
+  });
+  menu.classList.add('open');
+}
+function chooseCombo(key, value){
+  comboValue[key] = value;
+  comboInput(key).value = comboLabel(key);
+  comboMenu(key).classList.remove('open');
+  render();
+}
+function initCombo(key){
+  const input = comboInput(key);
+  input.value = comboAllLabel[key];
+  input.addEventListener('focus', ()=>{ input.select(); openComboMenu(key, ''); });
+  input.addEventListener('input', ()=> openComboMenu(key));
+  input.addEventListener('keydown', e=>{ if(e.key==='Escape') input.blur(); });
+  input.addEventListener('blur', ()=>{
+    // let a mousedown-selection above land first, then close + re-sync the
+    // displayed text in case they typed without picking anything
+    setTimeout(()=>{ comboMenu(key).classList.remove('open'); input.value = comboLabel(key); }, 0);
+  });
+}
+['team','person','dept','board'].forEach(initCombo);
+
 const ROLE_OPTS = [
   ['ignore','— ignore —'],['title','Title'],['person','Owner / Person'],
   ['due_date','Due date'],['status','Status'],['department','Department'],['hours','Hours'],
@@ -842,33 +936,25 @@ function commentCell(t){
 }
 
 function render(){
-  // populate filter dropdowns
-  const fp=$('#fPerson'), fb=$('#fBoard'), fd=$('#fDept'), ft=$('#fTeam');
-  if(fp.options.length<=1) STATE.people.forEach(p=>fp.add(new Option(p,p)));
-  if(fb.options.length<=1) STATE.boards.forEach(b=>fb.add(new Option(b.name,b.id)));
   const depts = STATE.departments||[];
-  if(fd.options.length<=1 && depts.length) depts.forEach(d=>fd.add(new Option(d,d)));
   $('#deptField').style.display = depts.length ? '' : 'none';
+  $('#teamField').style.display = Object.keys(STATE.teams||{}).length ? '' : 'none';
 
-  // Teams can be created/edited/removed within the same session (unlike
-  // boards/people, which only change via a sync), so rebuild the list every
-  // render instead of populating once — but keep whatever was selected.
-  const teams = Object.values(STATE.teams||{});
-  $('#teamField').style.display = teams.length ? '' : 'none';
-  {
-    const prevVal = ft.value;
-    ft.innerHTML = '<option value="">All teams</option>'
-      + teams.map(tm=>`<option value="${esc(tm.id)}">${esc(tm.name)}</option>`).join('');
-    if(teams.some(tm=>tm.id===prevVal)) ft.value = prevVal;
-  }
+  // Drop a filter's selection if the thing it pointed at no longer exists
+  // (e.g. a removed team, or a person who dropped out after a re-sync), and
+  // keep each combo's displayed text in sync with its current value.
+  ['team','person','dept','board'].forEach(key=>{
+    if(comboValue[key] && !comboOptsFn[key]().some(o=>o.value===comboValue[key])) comboValue[key]='';
+    if(document.activeElement!==comboInput(key)) comboInput(key).value = comboLabel(key);
+  });
 
   // build the Status checkbox menu once, from the distinct statuses
   const statuses = STATE.statuses||[];
   $('#statusField').style.display = statuses.length ? '' : 'none';
   if(statuses.length && !statusMenuBuilt) buildStatusMenu(statuses);
 
-  const person=$('#fPerson').value, board=$('#fBoard').value, st=$('#fState').value,
-        dept=$('#fDept').value, comments=$('#fComments').value, team=$('#fTeam').value,
+  const person=comboValue.person, board=comboValue.board, st=$('#fState').value,
+        dept=comboValue.dept, comments=$('#fComments').value, team=comboValue.team,
         due=$('#fDue').value, q=$('#fSearch').value.toLowerCase(), hideDone=$('#fHideDone').checked;
 
   // a task involves a person if they appear in ANY mapped people column
@@ -1126,11 +1212,12 @@ async function load(){
 }
 
 // ---- filter wiring ----
-['fPerson','fDept','fBoard','fTeam','fState','fComments','fDue','fSearch','fHideDone'].forEach(id=>{
+['fState','fComments','fDue','fSearch','fHideDone'].forEach(id=>{
   $('#'+id).addEventListener('input',render);
 });
 $('#clearBtn').onclick=()=>{
-  ['fPerson','fDept','fBoard','fTeam','fState','fComments','fDue','fSearch'].forEach(id=>$('#'+id).value='');
+  ['team','person','dept','board'].forEach(key=>{ comboValue[key]=''; comboInput(key).value = comboAllLabel[key]; });
+  ['fState','fComments','fDue','fSearch'].forEach(id=>$('#'+id).value='');
   $('#fHideDone').checked=true;
   hiddenStatuses.clear();
   if(statusMenuBuilt){

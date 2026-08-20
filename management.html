@@ -198,6 +198,10 @@
     to see the tasks behind it.</p>
 
   <div class="mgmt-controls">
+    <div class="field" id="teamQuickField" style="display:none">
+      <label>Team</label>
+      <select id="capTeam"><option value="">Quick-select a team's people…</option></select>
+    </div>
     <div class="field">
       <label>People</label>
       <div class="multi">
@@ -225,8 +229,8 @@
       <input type="checkbox" id="capSplitBoard" checked> Split by board
     </label>
     <div class="field" style="flex:1;min-width:220px">
-      <label>Hide tasks matching</label>
-      <input type="text" id="capHideNames" placeholder="e.g. Guest post, Newsletter">
+      <label>Task name contains</label>
+      <input type="text" id="capHideNames" placeholder="e.g. Guest post, Newsletter — hides matching tasks">
     </div>
   </div>
 
@@ -264,6 +268,7 @@ const boardColor = name => {
 const api = {
   data: () => fetch('/api/data').then(r=>r.json()),
   sync: () => fetch('/api/sync',{method:'POST'}).then(r=>r.json()),
+  teams: () => fetch('/api/teams').then(r=>r.json()),
 };
 
 let STATE = {tasks:[], people:[], today:new Date().toISOString().slice(0,10), hours_per_day:7, work_days_per_week:5};
@@ -642,6 +647,26 @@ $('#capDetailClose').onclick=()=>{
   if(capSelectedCol){ capSelectedCol.classList.remove('selected'); capSelectedCol=null; }
 };
 
+// Quick-selects a team's people into the People checkboxes — it's a
+// one-shot action, not a persistent filter, since "team" here just means
+// "whose rows do I want to see"; picks can still be tweaked afterward.
+function buildTeamQuickSelect(){
+  const teams = Object.values(STATE.teams||{});
+  $('#teamQuickField').style.display = teams.length ? '' : 'none';
+  const sel = $('#capTeam');
+  sel.innerHTML = '<option value="">Quick-select a team\'s people…</option>'
+    + teams.map(tm=>`<option value="${esc(tm.id)}">${esc(tm.name)}</option>`).join('');
+}
+$('#capTeam').addEventListener('change', ()=>{
+  const tm = STATE.teams[$('#capTeam').value];
+  $('#capTeam').value = '';
+  if(!tm) return;
+  const valid = (tm.people||[]).filter(p=>(STATE.people||[]).includes(p));
+  capSelectedPeople = new Set(valid);
+  buildCapPeopleMenu();
+  renderCapacityView();
+});
+
 function updateCapPeopleBtn(){
   const n = capSelectedPeople.size, all = (STATE.people||[]).length;
   const btn = $('#capPeopleBtn');
@@ -661,7 +686,8 @@ function buildCapPeopleMenu(){
     `<div class="mm-actions">
        <button type="button" id="capAll">Select all</button>
        <button type="button" id="capNone">Clear all</button>
-     </div>` +
+     </div>
+     <input type="text" id="capPeopleSearch" placeholder="Search people…" style="margin-bottom:6px">` +
     people.map(p=>`
       <label class="multi-opt">
         <input type="checkbox" value="${esc(p)}" ${capSelectedPeople.has(p)?'checked':''}>
@@ -675,9 +701,15 @@ function buildCapPeopleMenu(){
     });
   });
   $('#capAll').onclick=()=>{ people.forEach(p=>capSelectedPeople.add(p));
-    menu.querySelectorAll('input').forEach(cb=>cb.checked=true); updateCapPeopleBtn(); renderCapacityView(); };
+    menu.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=true); updateCapPeopleBtn(); renderCapacityView(); };
   $('#capNone').onclick=()=>{ capSelectedPeople.clear();
-    menu.querySelectorAll('input').forEach(cb=>cb.checked=false); updateCapPeopleBtn(); renderCapacityView(); };
+    menu.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false); updateCapPeopleBtn(); renderCapacityView(); };
+  $('#capPeopleSearch').addEventListener('input', e=>{
+    const q = e.target.value.toLowerCase();
+    menu.querySelectorAll('.multi-opt').forEach(opt=>{
+      opt.style.display = opt.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
 
   updateCapPeopleBtn();
 }
@@ -696,6 +728,8 @@ $('#capHideNames').addEventListener('input', ()=>{
 
 async function load(){
   STATE = await api.data();
+  STATE.teams = (await api.teams()).teams || {};
+  buildTeamQuickSelect();
   const savedHideNames = localStorage.getItem(HIDE_NAMES_KEY);
   if(savedHideNames!=null) $('#capHideNames').value = savedHideNames;
   buildCapPeopleMenu();

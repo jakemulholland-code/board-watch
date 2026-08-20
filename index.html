@@ -629,6 +629,14 @@ const api = {
 // spinner + a busy label — regardless of how long the actual work takes, so
 // a click never feels like it did nothing. Restores whatever the button
 // showed before, success or failure.
+// Appended to any "pulling latest from Monday" status message. The progress
+// bar and Activity log both sit behind the modal's full-screen backdrop while
+// it's open, so they're invisible right when people most want reassurance —
+// this note substitutes for that until the modal stops blocking them.
+const SYNCING_NOTE = '<br><span style="opacity:.75;font-size:.92em">This can take a few minutes for large boards. '
+  + 'Close this dialog to watch the live progress bar, or close this browser tab entirely — either way the sync '
+  + 'keeps running and your boards will be ready when you come back.</span>';
+
 // ---- sync progress ----
 // Polls /api/sync-progress while a sync is in flight and drives a top-of-page
 // progress bar + text readout, so a slow real pull (which can take minutes on
@@ -1141,7 +1149,7 @@ $('#importBoardsFile').onchange=e=>{
     // Pull fresh data for the imported boards right away, same as after saving
     // a single board's mapping — otherwise they'd sit tracked-but-empty until
     // the next manual refresh.
-    showMsg('manageMsg',`${summary} Pulling latest from Monday…`,'ok');
+    showMsg('manageMsg',`${summary} Pulling latest from Monday…${SYNCING_NOTE}`,'ok');
     try{
       const sr = await runSyncWithProgress();
       if(sr.error) throw new Error(sr.error);
@@ -1241,7 +1249,7 @@ $('#bulkAddBtn').onclick=()=> withBusy($('#bulkAddBtn'),'Adding…', async ()=>{
   }
   closeModal('bulkModal');
   openModal('manageModal');
-  showMsg('manageMsg',`<span class="spin"></span>Added ${toAdd.length} board(s) — pulling latest from Monday…`,'ok');
+  showMsg('manageMsg',`<span class="spin"></span>Added ${toAdd.length} board(s) — pulling latest from Monday…${SYNCING_NOTE}`,'ok');
   try{
     const sr = await runSyncWithProgress();
     if(sr.error) throw new Error(sr.error);
@@ -1429,7 +1437,7 @@ $('#saveMapBtn').onclick=()=> withBusy($('#saveMapBtn'),'Saving…', async ()=>{
   $('#newBoardId').value='';
   // Pull fresh data straight away so newly-mapped columns (e.g. Department)
   // appear without a separate manual refresh.
-  showMsg('manageMsg',`<span class="spin"></span>Saved “${mapCtx.name}” — pulling latest from Monday…`,'ok');
+  showMsg('manageMsg',`<span class="spin"></span>Saved “${mapCtx.name}” — pulling latest from Monday…${SYNCING_NOTE}`,'ok');
   try{
     const r = await runSyncWithProgress();
     if(r.error) throw new Error(r.error);

@@ -1,0 +1,10 @@
+{
+  "teams": {
+    "a1b2c3d4": {
+      "id": "a1b2c3d4",
+      "name": "SEO Team",
+      "board_ids": ["1234567890"],
+      "people": ["Jane Doe", "John Smith"]
+    }
+  }
+}

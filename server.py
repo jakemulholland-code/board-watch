@@ -16,6 +16,7 @@ Serves the static dashboard and exposes a tiny JSON API so the browser can:
   - poll progress of an in-flight sync         GET  /api/sync-progress
   - trigger a fresh pull from Monday           POST /api/sync
   - post an update (comment) back to Monday     POST /api/post-update
+  - list/save/remove teams (boards + people)   GET/POST /api/teams, /api/save-team, /api/remove-team
 
 Everything stays on the machine. No data leaves except the calls to Monday's API.
 """
@@ -23,6 +24,7 @@ Everything stays on the machine. No data leaves except the calls to Monday's API
 import json
 import os
 import datetime
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -76,6 +78,9 @@ class Handler(BaseHTTPRequestHandler):
 
         if route == "/api/sync-progress":
             return self._send(200, ms.read_progress())
+
+        if route == "/api/teams":
+            return self._send(200, ms.load_json(ms.TEAMS_FILE, {"teams": {}}))
 
         if route == "/api/export-boards":
             # Hand back the raw tracked-boards store (ids, columns, mapping,
@@ -167,6 +172,31 @@ class Handler(BaseHTTPRequestHandler):
                 # cached tasks from tasks.json, so deleted data disappears now.
                 cfg = ms.load_config(require_token=False)
                 ms.cmd_remove(cfg, str(body["id"]))
+                return self._send(200, {"ok": True})
+
+            if route == "/api/save-team":
+                body = read_body(self)
+                name = (body.get("name") or "").strip()
+                if not name:
+                    return self._send(400, {"error": "Team name is required."})
+                store = ms.load_json(ms.TEAMS_FILE, {"teams": {}})
+                tid = str(body.get("id") or uuid.uuid4().hex[:8])
+                store["teams"][tid] = {
+                    "id": tid,
+                    "name": name,
+                    "board_ids": [str(b) for b in (body.get("board_ids") or [])],
+                    "people": [p for p in (body.get("people") or []) if p],
+                }
+                ms.save_json(ms.TEAMS_FILE, store)
+                return self._send(200, {"ok": True, "id": tid})
+
+            if route == "/api/remove-team":
+                body = read_body(self)
+                store = ms.load_json(ms.TEAMS_FILE, {"teams": {}})
+                tid = str(body.get("id") or "")
+                if store["teams"].pop(tid, None) is None:
+                    return self._send(404, {"error": "Team not found."})
+                ms.save_json(ms.TEAMS_FILE, store)
                 return self._send(200, {"ok": True})
 
             if route == "/api/sync":

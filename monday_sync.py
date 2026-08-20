@@ -27,6 +27,7 @@ DATA_DIR = os.path.join(HERE, "data")
 BOARDS_FILE = os.path.join(DATA_DIR, "boards.json")
 TASKS_FILE = os.path.join(DATA_DIR, "tasks.json")
 PROGRESS_FILE = os.path.join(DATA_DIR, "sync_progress.json")
+TEAMS_FILE = os.path.join(DATA_DIR, "teams.json")
 CONFIG_FILE = os.path.join(HERE, "config.json")
 ENV_FILE = os.path.join(HERE, ".env")
 ENV_KEY = "MONDAY_API_TOKEN"

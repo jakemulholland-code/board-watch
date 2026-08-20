@@ -219,6 +219,17 @@
   .tracked-item{display:flex;align-items:center;justify-content:space-between;
     padding:.7rem .9rem;background:var(--surface3);border:1px solid var(--line);border-radius:10px;margin-bottom:.5rem}
   .tracked-item .meta{color:var(--muted2);font-size:.62rem;letter-spacing:.03em}
+  .team-item{display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;
+    padding:.7rem .9rem;background:var(--surface3);border:1px solid var(--line);border-radius:10px;margin-bottom:.5rem}
+  .team-item .team-name{font-weight:600;color:var(--ink);font-size:.85rem}
+  .team-item .team-detail{color:var(--muted2);font-size:.68rem;margin-top:.25rem;line-height:1.5}
+  .team-item .team-actions{display:flex;gap:.4rem;flex:none}
+  .team-picker{max-height:150px;overflow:auto;border:1px solid var(--line2);border-radius:9px;padding:6px;background:#fff}
+  .team-picker label{display:flex;align-items:center;gap:.55rem;padding:.4rem .5rem;border-radius:7px;
+    font-size:.8rem;cursor:pointer;user-select:none;font-weight:400}
+  .team-picker label:hover{background:var(--surface3)}
+  .team-picker input{accent-color:var(--teal-dark);width:15px;height:15px;flex:none}
+  .team-picker .team-picker-empty{color:var(--muted2);font-size:.78rem;font-style:italic;padding:.4rem .5rem}
   .import-export{display:flex;align-items:center;justify-content:space-between;gap:1.2rem;
     margin-top:1.2rem;padding-top:1.1rem;border-top:1px solid var(--line)}
   .ie-label{font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.3rem}
@@ -325,7 +336,7 @@
   <div class="hero-inner">
     <div class="hero-kicker">Monday.com Task Tracking</div>
     <h1 class="hero-title">Every deadline, <span class="accent">in view</span></h1>
-    <p class="hero-sub">Track tasks across all your Monday boards in one place — flagged the moment they're overdue or due soon, filterable by person, department, board and status.</p>
+    <p class="hero-sub">Track tasks across all your Monday boards in one place — flagged the moment they're overdue or due soon, filterable by team, person, department, board and status.</p>
   </div>
 </section>
 
@@ -335,6 +346,10 @@
 <section class="summary" id="summary"></section>
 
 <section class="filters">
+  <div class="field" id="teamField" style="display:none">
+    <label>Team</label>
+    <select id="fTeam"><option value="">All teams</option></select>
+  </div>
   <div class="field">
     <label>Person</label>
     <select id="fPerson"><option value="">Everyone</option></select>
@@ -476,8 +491,9 @@
         <input type="text" id="newBoardId" placeholder="board ID or monday.com board URL" style="flex:1">
         <button class="btn primary" id="loadColsBtn">Add & map</button>
       </div>
-      <div style="margin-bottom:16px">
+      <div style="margin-bottom:16px;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap">
         <button class="link" id="openBulkBtn" style="padding:0;color:var(--teal-dark)">Adding several boards? Bulk add by ID →</button>
+        <button class="link" id="openTeamsBtn" style="padding:0;color:var(--teal-dark)">Group boards + people into a team →</button>
       </div>
       <div id="trackedList"></div>
       <div class="msg" id="manageMsg"></div>
@@ -565,6 +581,41 @@
   </div>
 </div>
 
+<!-- Manage teams -->
+<div class="overlay" id="teamsModal">
+  <div class="modal" style="max-width:680px">
+    <header><h2>Manage teams</h2></header>
+    <div class="body">
+      <p class="hint">Group a set of boards and people into a team, then filter the dashboard down to just their
+        work — a task matches if it's on one of the team's boards <b>or</b> assigned to one of its people
+        (either counts).</p>
+      <div id="teamsList"></div>
+      <div style="margin-top:1.2rem;padding-top:1.2rem;border-top:1px solid var(--line)">
+        <div class="field" style="margin-bottom:.9rem">
+          <label id="teamFormLabel">New team</label>
+          <input type="text" id="teamName" placeholder="e.g. SEO Team" style="width:100%">
+        </div>
+        <div class="field" style="margin-bottom:.9rem">
+          <label>Boards</label>
+          <div id="teamBoardsPicker" class="team-picker"></div>
+        </div>
+        <div class="field" style="margin-bottom:.9rem">
+          <label>People</label>
+          <div id="teamPeoplePicker" class="team-picker"></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn ghost" id="teamCancelEditBtn" style="display:none">Cancel edit</button>
+          <button class="btn primary" id="teamSaveBtn">Save team</button>
+        </div>
+        <div class="msg" id="teamMsg"></div>
+      </div>
+    </div>
+    <div class="foot">
+      <button class="btn ghost" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const $ = s => document.querySelector(s);
 
@@ -627,6 +678,9 @@ const api = {
   tokenStatus:()=> call('Checking token status', '/api/token-status'),
   saveToken: t  => call('Saving API token', '/api/save-token',{method:'POST',body:JSON.stringify({token:t})}),
   postUpdate: (item_id,text,mentions)=> call(`Posting update to item ${item_id}`, '/api/post-update',{method:'POST',body:JSON.stringify({item_id,text,mentions})}),
+  teams: ()=> call('Loading teams', '/api/teams'),
+  saveTeam: t => call(`Saving team "${t.name}"`, '/api/save-team',{method:'POST',body:JSON.stringify(t)}),
+  removeTeam: id => call(`Removing team ${id}`, '/api/remove-team',{method:'POST',body:JSON.stringify({id})}),
 };
 
 // Makes a button visibly react the instant it's clicked — disabled + a
@@ -789,12 +843,24 @@ function commentCell(t){
 
 function render(){
   // populate filter dropdowns
-  const fp=$('#fPerson'), fb=$('#fBoard'), fd=$('#fDept');
+  const fp=$('#fPerson'), fb=$('#fBoard'), fd=$('#fDept'), ft=$('#fTeam');
   if(fp.options.length<=1) STATE.people.forEach(p=>fp.add(new Option(p,p)));
   if(fb.options.length<=1) STATE.boards.forEach(b=>fb.add(new Option(b.name,b.id)));
   const depts = STATE.departments||[];
   if(fd.options.length<=1 && depts.length) depts.forEach(d=>fd.add(new Option(d,d)));
   $('#deptField').style.display = depts.length ? '' : 'none';
+
+  // Teams can be created/edited/removed within the same session (unlike
+  // boards/people, which only change via a sync), so rebuild the list every
+  // render instead of populating once — but keep whatever was selected.
+  const teams = Object.values(STATE.teams||{});
+  $('#teamField').style.display = teams.length ? '' : 'none';
+  {
+    const prevVal = ft.value;
+    ft.innerHTML = '<option value="">All teams</option>'
+      + teams.map(tm=>`<option value="${esc(tm.id)}">${esc(tm.name)}</option>`).join('');
+    if(teams.some(tm=>tm.id===prevVal)) ft.value = prevVal;
+  }
 
   // build the Status checkbox menu once, from the distinct statuses
   const statuses = STATE.statuses||[];
@@ -802,16 +868,28 @@ function render(){
   if(statuses.length && !statusMenuBuilt) buildStatusMenu(statuses);
 
   const person=$('#fPerson').value, board=$('#fBoard').value, st=$('#fState').value,
-        dept=$('#fDept').value, comments=$('#fComments').value,
+        dept=$('#fDept').value, comments=$('#fComments').value, team=$('#fTeam').value,
         due=$('#fDue').value, q=$('#fSearch').value.toLowerCase(), hideDone=$('#fHideDone').checked;
 
   // a task involves a person if they appear in ANY mapped people column
   const hasPerson = (t,name) => (t.people && t.people.length ? t.people : [t.person]).includes(name);
+  // a team matches a task if the task is on one of the team's boards OR
+  // assigned to one of the team's people (either counts — a team's work
+  // isn't only what's on their own boards, and vice versa)
+  const matchesTeam = (t,teamId) => {
+    if(!teamId) return true;
+    const tm = STATE.teams[teamId];
+    if(!tm) return true;
+    const onTeamBoard = (tm.board_ids||[]).includes(t.board_id);
+    const isTeamPerson = (tm.people||[]).some(p=>hasPerson(t,p));
+    return onTeamBoard || isTeamPerson;
+  };
 
   let rows = STATE.tasks.filter(t=>{
     if(person && !hasPerson(t,person)) return false;
     if(dept && t.department!==dept) return false;
     if(board && t.board_id!==board) return false;
+    if(!matchesTeam(t,team)) return false;
     if(st && t.state!==st) return false;
     if(comments==='yes' && !t.update_count) return false;
     if(comments==='no' && t.update_count) return false;
@@ -827,6 +905,7 @@ function render(){
     if(person && !hasPerson(t,person)) return false;
     if(dept && t.department!==dept) return false;
     if(board && t.board_id!==board) return false;
+    if(!matchesTeam(t,team)) return false;
     if(t.status && hiddenStatuses.has(t.status)) return false;
     return true;
   });
@@ -1020,6 +1099,7 @@ document.addEventListener('click',e=>{
 function monthName(iso){ return iso ? new Date(iso+'T00:00').toLocaleDateString(undefined,{month:'short',year:'numeric'}) : ''; }
 async function load(){
   STATE = await api.data();
+  STATE.teams = (await api.teams()).teams || {};
   let stamp = STATE.generated_at
     ? `synced ${STATE.generated_at.replace('T',' ')} · today ${STATE.today} · warn ${STATE.warning_days}d`
     : 'no data yet — add a board and refresh';
@@ -1046,11 +1126,11 @@ async function load(){
 }
 
 // ---- filter wiring ----
-['fPerson','fDept','fBoard','fState','fComments','fDue','fSearch','fHideDone'].forEach(id=>{
+['fPerson','fDept','fBoard','fTeam','fState','fComments','fDue','fSearch','fHideDone'].forEach(id=>{
   $('#'+id).addEventListener('input',render);
 });
 $('#clearBtn').onclick=()=>{
-  ['fPerson','fDept','fBoard','fState','fComments','fDue','fSearch'].forEach(id=>$('#'+id).value='');
+  ['fPerson','fDept','fBoard','fTeam','fState','fComments','fDue','fSearch'].forEach(id=>$('#'+id).value='');
   $('#fHideDone').checked=true;
   hiddenStatuses.clear();
   if(statusMenuBuilt){
@@ -1166,6 +1246,100 @@ $('#importBoardsFile').onchange=e=>{
     }
     renderTracked();
   });
+};
+
+// ---- teams ----
+let editingTeamId = null;
+
+function renderTeamsList(){
+  const teams = Object.values(STATE.teams||{});
+  const boardNameById = Object.fromEntries((STATE.tracked||[]).map(b=>[b.id,b.name]));
+  $('#teamsList').innerHTML = teams.length ? teams.map(tm=>{
+    const boardNames = (tm.board_ids||[]).map(id=>boardNameById[id]||id);
+    const detail = [
+      boardNames.length ? `Boards: ${boardNames.join(', ')}` : 'No boards',
+      (tm.people||[]).length ? `People: ${tm.people.join(', ')}` : 'No people',
+    ].join(' · ');
+    return `<div class="team-item">
+      <div>
+        <div class="team-name">${esc(tm.name)}</div>
+        <div class="team-detail">${esc(detail)}</div>
+      </div>
+      <div class="team-actions">
+        <button class="btn ghost" style="padding:5px 10px;font-size:12px" onclick="editTeam('${esc(tm.id)}')">Edit</button>
+        <button class="link" onclick="removeTeam('${esc(tm.id)}',this)">Remove</button>
+      </div>
+    </div>`;
+  }).join('') : '<p class="hint">No teams yet — group boards and people below to create one.</p>';
+}
+
+function renderTeamPickers(selectedBoardIds, selectedPeople){
+  selectedBoardIds = selectedBoardIds || [];
+  selectedPeople = selectedPeople || [];
+  const boards = STATE.tracked||[];
+  $('#teamBoardsPicker').innerHTML = boards.length
+    ? boards.map(b=>`<label><input type="checkbox" value="${esc(b.id)}" ${selectedBoardIds.includes(b.id)?'checked':''}> ${esc(b.name)}</label>`).join('')
+    : '<div class="team-picker-empty">No boards tracked yet.</div>';
+  const people = STATE.people||[];
+  $('#teamPeoplePicker').innerHTML = people.length
+    ? people.map(p=>`<label><input type="checkbox" value="${esc(p)}" ${selectedPeople.includes(p)?'checked':''}> ${esc(p)}</label>`).join('')
+    : '<div class="team-picker-empty">No people found yet — sync a board first.</div>';
+}
+
+function clearTeamFormFields(){
+  editingTeamId = null;
+  $('#teamFormLabel').textContent = 'New team';
+  $('#teamName').value = '';
+  $('#teamCancelEditBtn').style.display = 'none';
+  renderTeamPickers([], []);
+}
+function resetTeamForm(){
+  clearTeamFormFields();
+  showMsg('teamMsg','');
+}
+$('#teamCancelEditBtn').onclick = resetTeamForm;
+
+function editTeam(id){
+  const tm = STATE.teams[id];
+  if(!tm) return;
+  editingTeamId = id;
+  $('#teamFormLabel').textContent = `Editing "${tm.name}"`;
+  $('#teamName').value = tm.name;
+  $('#teamCancelEditBtn').style.display = '';
+  renderTeamPickers(tm.board_ids||[], tm.people||[]);
+  showMsg('teamMsg','');
+  $('#teamName').focus();
+}
+
+function removeTeam(id, btn){
+  if(!confirm('Remove this team? This only removes the grouping — no boards or tasks are affected.')) return;
+  return withBusy(btn, 'Removing…', async ()=>{
+    await api.removeTeam(id);
+    STATE.teams = (await api.teams()).teams || {};
+    renderTeamsList();
+    render();          // refresh the Team filter dropdown + table
+    if(editingTeamId===id) resetTeamForm();
+  });
+}
+
+$('#teamSaveBtn').onclick=()=> withBusy($('#teamSaveBtn'),'Saving…', async ()=>{
+  const name = $('#teamName').value.trim();
+  if(!name){ showMsg('teamMsg','Give the team a name.','err'); return; }
+  const board_ids = Array.from(document.querySelectorAll('#teamBoardsPicker input:checked')).map(cb=>cb.value);
+  const people = Array.from(document.querySelectorAll('#teamPeoplePicker input:checked')).map(cb=>cb.value);
+  const r = await api.saveTeam({id:editingTeamId, name, board_ids, people});
+  if(r.error){ showMsg('teamMsg',r.error,'err'); return; }
+  STATE.teams = (await api.teams()).teams || {};
+  renderTeamsList();
+  render();
+  showMsg('teamMsg',`Saved "${name}".`,'ok');
+  clearTeamFormFields();
+});
+
+$('#openTeamsBtn').onclick=()=>{
+  resetTeamForm();
+  renderTeamsList();
+  closeModal('manageModal'); openModal('teamsModal');
 };
 
 // ---- bulk add ----

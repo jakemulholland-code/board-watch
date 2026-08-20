@@ -7,13 +7,15 @@
         { "id": "name", "title": "Task", "type": "name" },
         { "id": "person", "title": "Owner", "type": "people" },
         { "id": "date4", "title": "Due Date", "type": "date" },
-        { "id": "status", "title": "Status", "type": "status" }
+        { "id": "status", "title": "Status", "type": "status" },
+        { "id": "numbers", "title": "Hours", "type": "numbers" }
       ],
       "mapping": {
         "title": "name",
         "person": ["person"],
         "due_date": "date4",
-        "status": "status"
+        "status": "status",
+        "hours": "numbers"
       },
       "mapping_mode": "default",
       "done_labels": ["done"]

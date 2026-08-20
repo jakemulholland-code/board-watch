@@ -39,10 +39,11 @@ API_VERSION = "2025-07"
 
 # The "roles" a column can be mapped to. due_date/status drive the overdue
 # logic; department lets multichannel boards be filtered to one team; title
-# overrides the item name. "person" is special: it may be mapped to MORE THAN
-# ONE column (e.g. a board with separate Assignor and Assignee columns) and all
-# mapped people columns are pooled together. Every other role is single-column.
-ROLES = ["title", "person", "due_date", "status", "department", "ignore"]
+# overrides the item name; hours feeds the Management (capacity) view. "person"
+# is special: it may be mapped to MORE THAN ONE column (e.g. a board with
+# separate Assignor and Assignee columns) and all mapped people columns are
+# pooled together. Every other role is single-column.
+ROLES = ["title", "person", "due_date", "status", "department", "hours", "ignore"]
 MULTI_ROLES = ["person"]
 
 # Keyword hints used to build the "default" mapping preset from column titles,
@@ -51,12 +52,13 @@ MULTI_ROLES = ["person"]
 # point — whatever ends up in boards.json (default or hand-edited) is what's
 # actually used. Checked in this order so e.g. "Assignee Name" matches person
 # before it could match title on "name".
-DEFAULT_ROLE_ORDER = ["person", "due_date", "status", "department", "title"]
+DEFAULT_ROLE_ORDER = ["person", "due_date", "status", "department", "hours", "title"]
 DEFAULT_ROLE_KEYWORDS = {
     "person": ["assignee", "assignor", "person", "people", "owner"],
     "due_date": ["due date", "due"],
     "status": ["status"],
     "department": ["department"],
+    "hours": ["hours"],
     "title": ["name", "title"],
 }
 
@@ -169,6 +171,10 @@ def load_settings():
     #    (case-insensitive). Tasks with no due date are always kept.
     cfg.setdefault("lookback_months", 4)
     cfg.setdefault("excluded_departments", ["PPC", "Paid Social", "Comms", "Development"])
+    # Used by the Management (capacity) view to work out each person's weekly
+    # capacity in hours — hours_per_day * work_days_per_week.
+    cfg.setdefault("hours_per_day", 7)
+    cfg.setdefault("work_days_per_week", 5)
     # Your Monday account slug — the "yourcompany" in yourcompany.monday.com.
     # Used to build "Open in Monday" links straight to each item.
     cfg.setdefault("monday_account", "paramount-digital-ltd")
@@ -401,7 +407,7 @@ def fetch_items_count(cfg, board_ids):
 def interactive_map(board):
     cols = board["columns"]
     print(f"\nMapping columns for board: {board['name']} ({board['id']})")
-    print("Roles: title | person | due_date | status | department | ignore")
+    print("Roles: title | person | due_date | status | department | hours | ignore")
     print("(Press Enter to accept the suggested default shown for each column.")
     print(" 'person' may be used on several columns — e.g. Assignor and")
     print(" Assignee — and all are pooled together.)\n")
@@ -525,6 +531,7 @@ def empty_tasks():
         "generated_at": datetime.datetime.now().isoformat(timespec="seconds"),
         "today": datetime.date.today().isoformat(),
         "warning_days": 3,
+        "hours_per_day": 7, "work_days_per_week": 5,
         "boards": [], "people": [], "departments": [], "statuses": [],
         "tasks": [], "errors": [],
     }
@@ -570,6 +577,15 @@ def process_item(it, m, done_labels, board, today, warn):
 
     status = cv.get(m.get("status", ""), {}).get("text", "") or ""
     department = cv.get(m.get("department", ""), {}).get("text", "") or ""
+
+    hours = None
+    if "hours" in m and cv.get(m["hours"]):
+        raw_hours = (cv[m["hours"]].get("text") or "").strip()
+        if raw_hours:
+            try:
+                hours = float(raw_hours)
+            except ValueError:
+                hours = None
 
     due = None
     if "due_date" in m and cv.get(m["due_date"]):
@@ -633,7 +649,7 @@ def process_item(it, m, done_labels, board, today, warn):
         "board_id": board["id"], "board_name": board["name"],
         "group": (it.get("group") or {}).get("title", ""),
         "person": person, "people": people, "people_ids": people_ids,
-        "department": department, "status": status,
+        "department": department, "status": status, "hours": hours,
         "is_done": is_done, "due_date": due,
         "days_left": days_left, "state": state,
         "update_count": update_count,
@@ -727,6 +743,8 @@ def cmd_sync(cfg):
         "generated_at": datetime.datetime.now().isoformat(timespec="seconds"),
         "today": today.isoformat(),
         "warning_days": warn,
+        "hours_per_day": float(cfg.get("hours_per_day", 7) or 7),
+        "work_days_per_week": float(cfg.get("work_days_per_week", 5) or 5),
         "monday_account": (cfg.get("monday_account") or "").strip(),
         "boards": [{"id": b["id"], "name": b["name"]} for b in store["boards"].values()],
         "people": sorted({n for t in out_tasks for n in t["people"]}),

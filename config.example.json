@@ -4,5 +4,7 @@
   "warning_days": 3,
   "lookback_months": 4,
   "excluded_departments": ["PPC", "Paid Social", "Comms", "Development"],
+  "hours_per_day": 7,
+  "work_days_per_week": 5,
   "monday_account": "paramount-digital-ltd"
 }

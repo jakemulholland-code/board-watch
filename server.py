@@ -77,7 +77,13 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"has_token": bool(ms.get_token())})
 
         if route == "/api/sync-progress":
-            return self._send(200, ms.read_progress())
+            # Polled every ~700ms during a sync — if a transient read hiccup
+            # somehow survives load_json's own retries, just say "unknown"
+            # rather than erroring out; the next poll a moment later is fine.
+            try:
+                return self._send(200, ms.read_progress())
+            except Exception:  # noqa: BLE001
+                return self._send(200, {"status": "unknown"})
 
         if route == "/api/teams":
             return self._send(200, ms.load_json(ms.TEAMS_FILE, {"teams": {}}))

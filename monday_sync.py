@@ -18,6 +18,8 @@ their own person/date/status/title column assignments. Nothing is hard-coded.
 import json
 import os
 import sys
+import tempfile
+import time
 import datetime
 import urllib.request
 import urllib.error
@@ -104,21 +106,63 @@ def guess_mapping(columns):
 def load_json(path, default):
     if not os.path.exists(path):
         return default
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    # sync_progress.json in particular gets written very frequently during a
+    # big multi-board sync (once per page, per board) while the browser polls
+    # it every ~700ms — on Windows two threads opening the same file at the
+    # same instant can raise a transient "Permission denied" that has nothing
+    # to do with real permissions. A couple of quick retries clears it up.
+    last_err = None
+    for attempt in range(3):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (PermissionError, OSError, json.JSONDecodeError) as e:
+            last_err = e
+            time.sleep(0.05)
+    raise last_err
 
 
 def save_json(path, obj):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=2, ensure_ascii=False)
+    # Write to a temp file and atomically rename it into place, rather than
+    # truncating the real file in-place — avoids readers ever seeing a
+    # half-written file. On Windows, os.replace() itself can still fail with
+    # "Access is denied" if another thread has the destination open for
+    # reading at that exact instant (Windows won't rename over an open
+    # handle) — that window is microseconds, so a few quick retries clears
+    # it up rather than losing the write.
+    d = os.path.dirname(path)
+    os.makedirs(d, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(dir=d, prefix=os.path.basename(path) + ".", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(obj, f, indent=2, ensure_ascii=False)
+        last_err = None
+        for attempt in range(40):
+            try:
+                os.replace(tmp_path, path)
+                return
+            except (PermissionError, OSError) as e:
+                last_err = e
+                time.sleep(0.015)
+        raise last_err
+    except Exception:
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+        raise
 
 
 def write_progress(data):
     """Snapshot of an in-progress (or just-finished) sync, polled by the
     browser to drive the progress bar. Not meant to be durable state — just
-    the latest status."""
-    save_json(PROGRESS_FILE, data)
+    the latest status — so a write glitch here (e.g. a stubborn Windows
+    file-sharing collision) must never be allowed to abort the actual sync;
+    it's better to silently skip one progress update than fail a board."""
+    try:
+        save_json(PROGRESS_FILE, data)
+    except OSError as e:
+        print(f"  (progress update skipped: {e})")
 
 
 def read_progress():

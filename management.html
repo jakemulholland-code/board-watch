@@ -14,7 +14,7 @@
     --ink:#1a1a1a; --text:#2a2a2a; --muted:#6a6a6a; --muted2:#a3a3a3;
     --line:#ededed; --line2:#dedede;
     --teal:#01C6A3; --teal-dark:#008475; --amber:#E8A828; --red:#DA1A50;
-    --overdue-bg:#fdeef2; --ok-bg:#e7f8f4;
+    --overdue-bg:#fdeef2; --ok-bg:#e7f8f4; --warning:#B47A00; --warning-bg:#fbf3e0;
     --mono:'Sora',ui-monospace,Menlo,monospace;
     --sans:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     --serif:'Fraunces',Georgia,serif;
@@ -154,6 +154,7 @@
   .cap-detail-flag.overdue{color:var(--red);background:var(--overdue-bg)}
   .cap-detail-flag.done{color:var(--teal-dark);background:var(--ok-bg)}
   .cap-detail-flag.ontrack{color:var(--muted);background:var(--surface2)}
+  .cap-detail-flag.late{color:var(--warning);background:var(--warning-bg)}
   .cap-detail-hours{font-weight:700;color:var(--ink);width:56px;text-align:right;flex:none}
   .cap-detail-date{color:var(--muted2);width:80px;text-align:right;flex:none;font-size:.72rem}
 
@@ -365,15 +366,20 @@ function computeCapacity(peopleNames, weeksCount){
 }
 
 // Looks back over weeks strictly before this week: for tasks due in that
-// week (regardless of current done state), splits hours into what's now
-// done vs what's still outstanding — i.e. slipped past its week.
+// week (regardless of current done state), splits hours into:
+//  - onTime:    done, and completed on or before its due date
+//  - late:      done, but completed after its due date
+//  - doneUnknown: done, but no Completed date is mapped so on-time/late
+//                 can't be told apart — kept distinct rather than guessed
+//  - outstanding: not done — i.e. slipped past its week and still open
 function computeHistory(peopleNames, weeksBack){
   const wk0 = mondayOf(STATE.today);
   const weeks = [];
   for(let i=weeksBack;i>=1;i--) weeks.push(addDays(wk0,-i*7));
   const perPerson = {};
   peopleNames.forEach(p=> perPerson[p] = weeks.map(()=>(
-    {doneHours:0, doneCount:0, outstandingHours:0, outstandingCount:0, tasks:[]}
+    {onTimeHours:0, onTimeCount:0, lateHours:0, lateCount:0,
+     doneUnknownHours:0, doneUnknownCount:0, outstandingHours:0, outstandingCount:0, tasks:[]}
   )));
   if(!weeksBack) return {weeks, perPerson};
 
@@ -386,19 +392,28 @@ function computeHistory(peopleNames, weeksBack){
     const wkStart = mondayOf(t.due_date);
     const idx = weeks.findIndex(w=>w.getTime()===wkStart.getTime());
     if(idx===-1) return;
+
+    let delivery;
+    if(!t.is_done) delivery = 'outstanding';
+    else if(!t.completed_date) delivery = 'doneUnknown';
+    else delivery = (t.completed_date <= t.due_date) ? 'onTime' : 'late';
+
     matched.forEach(n=>{
       const bucket = perPerson[n][idx];
-      if(t.is_done){ bucket.doneHours += t.hours; bucket.doneCount++; }
-      else { bucket.outstandingHours += t.hours; bucket.outstandingCount++; }
-      bucket.tasks.push({id:t.id, title:t.title, board_name:t.board_name, hours:t.hours, due_date:t.due_date, is_done:t.is_done});
+      if(delivery==='onTime'){ bucket.onTimeHours+=t.hours; bucket.onTimeCount++; }
+      else if(delivery==='late'){ bucket.lateHours+=t.hours; bucket.lateCount++; }
+      else if(delivery==='doneUnknown'){ bucket.doneUnknownHours+=t.hours; bucket.doneUnknownCount++; }
+      else { bucket.outstandingHours+=t.hours; bucket.outstandingCount++; }
+      bucket.tasks.push({id:t.id, title:t.title, board_name:t.board_name, hours:t.hours,
+        due_date:t.due_date, completed_date:t.completed_date, delivery});
     });
   });
   return {weeks, perPerson};
 }
 
-function deliveryClass(doneHours, total){
+function deliveryClass(deliveredHours, total){
   if(!total) return 'cap-light';
-  const ratio = doneHours/total;
+  const ratio = deliveredHours/total;
   if(ratio>=0.9) return 'cap-good';
   if(ratio<0.5) return 'cap-slipped';
   return 'cap-mixed';
@@ -431,7 +446,8 @@ function renderCapacityView(){
   let maxTotal = capacityPerWeek;
   people.forEach(p=>{
     upcoming.perPerson[p].forEach(b=> maxTotal=Math.max(maxTotal,b.total));
-    (history.perPerson[p]||[]).forEach(b=> maxTotal=Math.max(maxTotal,b.doneHours+b.outstandingHours));
+    (history.perPerson[p]||[]).forEach(b=> maxTotal=Math.max(maxTotal,
+      b.onTimeHours+b.lateHours+b.doneUnknownHours+b.outstandingHours));
   });
   const scaleMax = maxTotal*1.15;
   const capPx = Math.round(capacityPerWeek/scaleMax*CAP_CHART_H);
@@ -481,23 +497,35 @@ function renderCapacityView(){
     if(weeksBack){
       const hBuckets = history.perPerson[p];
       const hBadges = hBuckets.map(b=>{
-        const total = b.doneHours+b.outstandingHours;
-        return `<div class="cap-badge ${deliveryClass(b.doneHours,total)}">${total?b.doneHours.toFixed(1)+'/'+total.toFixed(1)+'h':''}</div>`;
+        const total = b.onTimeHours+b.lateHours+b.doneUnknownHours+b.outstandingHours;
+        const delivered = b.onTimeHours+b.lateHours+b.doneUnknownHours;
+        return `<div class="cap-badge ${deliveryClass(b.onTimeHours,total)}">${total?delivered.toFixed(1)+'/'+total.toFixed(1)+'h':''}</div>`;
       }).join('');
       const hCols = hBuckets.map((b,i)=>{
         const segs = [
-          b.doneHours ? `<div class="cap-seg" style="height:${Math.round(b.doneHours/scaleMax*CAP_CHART_H)}px;background:var(--teal)"></div>` : '',
+          b.onTimeHours ? `<div class="cap-seg" style="height:${Math.round(b.onTimeHours/scaleMax*CAP_CHART_H)}px;background:var(--teal)"></div>` : '',
+          b.lateHours ? `<div class="cap-seg" style="height:${Math.round(b.lateHours/scaleMax*CAP_CHART_H)}px;background:var(--amber)"></div>` : '',
+          b.doneUnknownHours ? `<div class="cap-seg" style="height:${Math.round(b.doneUnknownHours/scaleMax*CAP_CHART_H)}px;background:var(--muted2)"></div>` : '',
           b.outstandingHours ? `<div class="cap-seg" style="height:${Math.round(b.outstandingHours/scaleMax*CAP_CHART_H)}px;background:var(--red)"></div>` : '',
         ].join('');
-        const total = b.doneHours+b.outstandingHours;
-        const tip = `${fmtWeekLabel(history.weeks[i])} — ${b.doneHours.toFixed(1)}h done, ${b.outstandingHours.toFixed(1)}h still outstanding (of ${total.toFixed(1)}h planned) — click for tasks`;
+        const total = b.onTimeHours+b.lateHours+b.doneUnknownHours+b.outstandingHours;
+        const parts = [];
+        if(b.onTimeHours) parts.push(`${b.onTimeHours.toFixed(1)}h on time`);
+        if(b.lateHours) parts.push(`${b.lateHours.toFixed(1)}h late`);
+        if(b.doneUnknownHours) parts.push(`${b.doneUnknownHours.toFixed(1)}h done (no completed date mapped)`);
+        if(b.outstandingHours) parts.push(`${b.outstandingHours.toFixed(1)}h still outstanding`);
+        const tip = `${fmtWeekLabel(history.weeks[i])} — ${parts.join(', ')||'nothing planned'} (of ${total.toFixed(1)}h planned) — click for tasks`;
         return `<div class="cap-col" data-kind="history" data-person="${esc(p)}" data-idx="${i}" title="${esc(tip)}">
           <div class="cap-bar-track" style="height:${CAP_CHART_H}px">${segs}</div>
         </div>`;
       }).join('');
       const hLabels = history.weeks.map(w=>`<div class="cap-wk-label">${fmtWeekLabel(w)}</div>`).join('');
       historyHtml = `<div class="cap-history">
-        <div class="cap-section-label">Recent ${weeksBack}w — planned vs delivered (teal = done, red = still outstanding)</div>
+        <div class="cap-section-label">Recent ${weeksBack}w — planned vs delivered
+          (<span style="color:var(--teal-dark)">teal = on time</span>,
+           <span style="color:var(--amber)">amber = late</span>,
+           <span style="color:var(--muted)">grey = done, no completed date</span>,
+           <span style="color:var(--red)">red = still outstanding</span>)</div>
         <div class="cap-track">
           <div class="cap-badges">${hBadges}</div>
           <div class="cap-plot">
@@ -554,16 +582,23 @@ function showCapDetail(kind, person, idx, trackEl){
   const weekDate = src.weeks[idx];
   $('#capDetailTitle').textContent = `${person} — ${fmtWeekLabel(weekDate)}${kind==='history'?' (past)':''}`;
   const tasks = (bucket.tasks||[]).slice().sort((a,b)=>(a.due_date||'').localeCompare(b.due_date||''));
+  const historyFlags = {
+    onTime: '<span class="cap-detail-flag done">On time</span>',
+    late: '<span class="cap-detail-flag late">Late</span>',
+    doneUnknown: '<span class="cap-detail-flag ontrack">Done (no completed date)</span>',
+    outstanding: '<span class="cap-detail-flag overdue">Outstanding</span>',
+  };
   $('#capDetailList').innerHTML = tasks.length ? tasks.map(t=>{
-    let flag = '';
-    if(kind==='upcoming') flag = t.overdue ? '<span class="cap-detail-flag overdue">Overdue</span>' : '<span class="cap-detail-flag ontrack">This week</span>';
-    else flag = t.is_done ? '<span class="cap-detail-flag done">Done</span>' : '<span class="cap-detail-flag overdue">Outstanding</span>';
+    const flag = kind==='upcoming'
+      ? (t.overdue ? '<span class="cap-detail-flag overdue">Overdue</span>' : '<span class="cap-detail-flag ontrack">This week</span>')
+      : (historyFlags[t.delivery] || '');
+    const dateBit = kind==='history' && t.completed_date ? `done ${esc(t.completed_date)}` : esc(t.due_date||'');
     return `<div class="cap-detail-row">
       <span class="cap-detail-title">${esc(t.title)}</span>
       <span class="pill">${esc(t.board_name)}</span>
       ${flag}
       <span class="cap-detail-hours">${t.hours.toFixed(1)}h</span>
-      <span class="cap-detail-date">${esc(t.due_date||'')}</span>
+      <span class="cap-detail-date">${dateBit}</span>
     </div>`;
   }).join('') : '<div class="empty">No tasks in this bucket.</div>';
   $('#capDetailDrawer').classList.add('open');

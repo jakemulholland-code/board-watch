@@ -39,11 +39,14 @@ API_VERSION = "2025-07"
 
 # The "roles" a column can be mapped to. due_date/status drive the overdue
 # logic; department lets multichannel boards be filtered to one team; title
-# overrides the item name; hours feeds the Management (capacity) view. "person"
-# is special: it may be mapped to MORE THAN ONE column (e.g. a board with
-# separate Assignor and Assignee columns) and all mapped people columns are
-# pooled together. Every other role is single-column.
-ROLES = ["title", "person", "due_date", "status", "department", "hours", "ignore"]
+# overrides the item name; hours feeds the Management (capacity) view.
+# completed_date is optional and, when mapped, lets the Management view's
+# history chart tell genuinely on-time delivery apart from late — without it,
+# "delivered" there only means "currently marked done", regardless of when.
+# "person" is special: it may be mapped to MORE THAN ONE column (e.g. a board
+# with separate Assignor and Assignee columns) and all mapped people columns
+# are pooled together. Every other role is single-column.
+ROLES = ["title", "person", "due_date", "status", "department", "hours", "completed_date", "ignore"]
 MULTI_ROLES = ["person"]
 
 # Keyword hints used to build the "default" mapping preset from column titles,
@@ -51,10 +54,12 @@ MULTI_ROLES = ["person"]
 # instead of every column starting on "ignore". This is only ever a starting
 # point — whatever ends up in boards.json (default or hand-edited) is what's
 # actually used. Checked in this order so e.g. "Assignee Name" matches person
-# before it could match title on "name".
-DEFAULT_ROLE_ORDER = ["person", "due_date", "status", "department", "hours", "title"]
+# before it could match title on "name", and "Completed Date" matches
+# completed_date before it could match due_date on "date".
+DEFAULT_ROLE_ORDER = ["person", "completed_date", "due_date", "status", "department", "hours", "title"]
 DEFAULT_ROLE_KEYWORDS = {
     "person": ["assignee", "assignor", "person", "people", "owner"],
+    "completed_date": ["completed date", "completion date", "date completed", "done date"],
     "due_date": ["due date", "due"],
     "status": ["status"],
     "department": ["department"],
@@ -407,7 +412,7 @@ def fetch_items_count(cfg, board_ids):
 def interactive_map(board):
     cols = board["columns"]
     print(f"\nMapping columns for board: {board['name']} ({board['id']})")
-    print("Roles: title | person | due_date | status | department | hours | ignore")
+    print("Roles: title | person | due_date | status | department | hours | completed_date | ignore")
     print("(Press Enter to accept the suggested default shown for each column.")
     print(" 'person' may be used on several columns — e.g. Assignor and")
     print(" Assignee — and all are pooled together.)\n")
@@ -593,6 +598,12 @@ def process_item(it, m, done_labels, board, today, warn):
         d = parse_date(dc.get("text", ""), dc.get("value"))
         due = d.isoformat() if d else None
 
+    completed_date = None
+    if "completed_date" in m and cv.get(m["completed_date"]):
+        cdc = cv[m["completed_date"]]
+        cd = parse_date(cdc.get("text", ""), cdc.get("value"))
+        completed_date = cd.isoformat() if cd else None
+
     is_done = status.lower() in done_labels
 
     state = "none"
@@ -650,7 +661,7 @@ def process_item(it, m, done_labels, board, today, warn):
         "group": (it.get("group") or {}).get("title", ""),
         "person": person, "people": people, "people_ids": people_ids,
         "department": department, "status": status, "hours": hours,
-        "is_done": is_done, "due_date": due,
+        "is_done": is_done, "due_date": due, "completed_date": completed_date,
         "days_left": days_left, "state": state,
         "update_count": update_count,
         "has_update": update_count > 0,

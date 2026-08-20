@@ -1482,6 +1482,13 @@ async function boot(){
     return;
   }
   await load();
+  // Lets other pages (e.g. Management view) deep-link straight to a task's
+  // detail modal via ?openTask=<id> instead of duplicating it themselves.
+  const openTaskId = new URLSearchParams(location.search).get('openTask');
+  if(openTaskId){
+    openDetail(openTaskId);
+    history.replaceState(null, '', location.pathname);
+  }
 }
 boot();
 </script>

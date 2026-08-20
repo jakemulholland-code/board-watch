@@ -147,7 +147,9 @@
     border-bottom:1px solid var(--line);background:var(--surface3);flex:none}
   .cap-detail-head span{font-size:.82rem;font-weight:700;color:var(--ink);font-family:var(--serif)}
   .cap-detail-list{overflow:auto;padding:.3rem .6rem}
-  .cap-detail-row{display:flex;align-items:center;gap:.6rem;padding:.55rem .3rem;border-bottom:1px solid var(--line);font-size:.8rem}
+  .cap-detail-row{display:flex;align-items:center;gap:.6rem;padding:.55rem .3rem;border-bottom:1px solid var(--line);font-size:.8rem;cursor:pointer;border-radius:6px;transition:background .1s}
+  .cap-detail-row:hover{background:var(--surface3)}
+  .cap-detail-row:hover .cap-detail-title{color:var(--teal-dark)}
   .cap-detail-row:last-child{border-bottom:none}
   .cap-detail-title{flex:1;min-width:0;color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cap-detail-flag{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:.15rem .5rem;border-radius:20px;white-space:nowrap}
@@ -593,7 +595,7 @@ function showCapDetail(kind, person, idx, trackEl){
       ? (t.overdue ? '<span class="cap-detail-flag overdue">Overdue</span>' : '<span class="cap-detail-flag ontrack">This week</span>')
       : (historyFlags[t.delivery] || '');
     const dateBit = kind==='history' && t.completed_date ? `done ${esc(t.completed_date)}` : esc(t.due_date||'');
-    return `<div class="cap-detail-row">
+    return `<div class="cap-detail-row" data-task-id="${esc(t.id)}" title="Open this task on the dashboard">
       <span class="cap-detail-title">${esc(t.title)}</span>
       <span class="pill">${esc(t.board_name)}</span>
       ${flag}
@@ -601,6 +603,9 @@ function showCapDetail(kind, person, idx, trackEl){
       <span class="cap-detail-date">${dateBit}</span>
     </div>`;
   }).join('') : '<div class="empty">No tasks in this bucket.</div>';
+  $('#capDetailList').querySelectorAll('.cap-detail-row[data-task-id]').forEach(row=>{
+    row.addEventListener('click', ()=> window.open(`/?openTask=${encodeURIComponent(row.dataset.taskId)}`, '_blank'));
+  });
   $('#capDetailDrawer').classList.add('open');
 }
 $('#capDetailClose').onclick=()=>{

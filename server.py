@@ -10,6 +10,8 @@ Serves the static dashboard and exposes a tiny JSON API so the browser can:
   - discover a board's columns (for mapping)   GET  /api/board-columns?id=<board_id>
   - save a board + its column mapping          POST /api/save-board
   - remove a board                             POST /api/remove-board
+  - export tracked boards + mappings           GET  /api/export-boards
+  - import tracked boards + mappings           POST /api/import-boards
   - trigger a fresh pull from Monday           POST /api/sync
   - post an update (comment) back to Monday     POST /api/post-update
 
@@ -67,6 +69,15 @@ class Handler(BaseHTTPRequestHandler):
         if route == "/api/token-status":
             return self._send(200, {"has_token": bool(ms.get_token())})
 
+        if route == "/api/export-boards":
+            # Hand back the raw tracked-boards store (ids, columns, mapping,
+            # mapping_mode, done_labels per board) so it can be saved as a
+            # file and dropped back in on a fresh clone / after an update —
+            # data/boards.json is gitignored, so this is the supported way to
+            # carry board setups across machines without redoing every mapping.
+            store = ms.load_json(ms.BOARDS_FILE, {"boards": {}})
+            return self._send(200, store)
+
         if route == "/api/board-columns":
             qs = parse_qs(parsed.query)
             bid = (qs.get("id") or [""])[0]
@@ -120,6 +131,27 @@ class Handler(BaseHTTPRequestHandler):
                 }
                 ms.save_json(ms.BOARDS_FILE, store)
                 return self._send(200, {"ok": True})
+
+            if route == "/api/import-boards":
+                body = read_body(self)
+                incoming = body.get("boards") if isinstance(body, dict) else None
+                if not isinstance(incoming, dict):
+                    return self._send(400, {"error": "That doesn't look like a boards export file (expected a top-level \"boards\" object)."})
+                store = ms.load_json(ms.BOARDS_FILE, {"boards": {}})
+                added, updated, skipped = 0, 0, 0
+                for bid, b in incoming.items():
+                    if not isinstance(b, dict) or "mapping" not in b or "columns" not in b:
+                        skipped += 1
+                        continue
+                    bid = str(b.get("id") or bid)
+                    b["id"] = bid
+                    if bid in store["boards"]:
+                        updated += 1
+                    else:
+                        added += 1
+                    store["boards"][bid] = b
+                ms.save_json(ms.BOARDS_FILE, store)
+                return self._send(200, {"ok": True, "added": added, "updated": updated, "skipped": skipped})
 
             if route == "/api/remove-board":
                 body = read_body(self)

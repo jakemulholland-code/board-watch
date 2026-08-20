@@ -219,6 +219,18 @@
   .tracked-item{display:flex;align-items:center;justify-content:space-between;
     padding:.7rem .9rem;background:var(--surface3);border:1px solid var(--line);border-radius:10px;margin-bottom:.5rem}
   .tracked-item .meta{color:var(--muted2);font-size:.62rem;letter-spacing:.03em}
+  .import-export{display:flex;align-items:center;justify-content:space-between;gap:1.2rem;
+    margin-top:1.2rem;padding-top:1.1rem;border-top:1px solid var(--line)}
+  .ie-label{font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.3rem}
+  .bulk-textarea{width:100%;background:var(--surface2);border:1px solid var(--line2);color:var(--text);
+    font-family:var(--sans);font-size:.84rem;padding:.6rem .8rem;border-radius:9px;outline:none;resize:vertical;transition:border-color .14s}
+  .bulk-textarea:focus{border-color:var(--teal);background:#fff}
+  .bulk-row{display:flex;gap:.7rem;align-items:flex-start;padding:.7rem .2rem;border-bottom:1px solid var(--line)}
+  .bulk-row:last-child{border-bottom:none}
+  .bulk-row input[type=checkbox]{accent-color:var(--teal-dark);width:15px;height:15px;margin-top:.15rem;flex:none}
+  .bulk-row.bulk-row-err{color:var(--muted2)}
+  .bulk-row .meta{color:var(--muted2);font-size:.68rem}
+  .mp-chip.mp-warn{color:var(--warning);background:var(--warning-bg);border-color:rgba(180,122,0,.25)}
   .link{color:var(--red);background:none;border:none;font-size:.72rem;padding:.25rem .4rem;font-weight:600}
   .link:hover{text-decoration:underline}
   .msg{font-size:.76rem;padding:.6rem .85rem;border-radius:9px;margin-top:.7rem;display:none;font-weight:400;line-height:1.5}
@@ -413,12 +425,29 @@
     <div class="body">
       <p class="hint">Add a board by its numeric ID (found in the board's URL on monday.com).
         Columns are mapped once and saved, so boards with different layouts all work.</p>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
         <input type="text" id="newBoardId" placeholder="e.g. 1234567890" style="flex:1">
         <button class="btn primary" id="loadColsBtn">Add & map</button>
       </div>
+      <div style="margin-bottom:16px">
+        <button class="link" id="openBulkBtn" style="padding:0;color:var(--teal-dark)">Adding several boards? Bulk add by ID →</button>
+      </div>
       <div id="trackedList"></div>
       <div class="msg" id="manageMsg"></div>
+
+      <div class="import-export">
+        <div>
+          <div class="ie-label">Board setups</div>
+          <p class="hint" style="margin-bottom:0">Save your boards + mappings to a file, or drop one back in — handy
+            after pulling an update, or moving to a new machine. Import adds/updates boards by ID; it never removes
+            boards you already have tracked.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex:none">
+          <button class="btn ghost" id="exportBoardsBtn">Export</button>
+          <button class="btn ghost" id="importBoardsBtn">Import</button>
+          <input type="file" id="importBoardsFile" accept="application/json,.json" style="display:none">
+        </div>
+      </div>
     </div>
     <div class="foot">
       <button class="btn ghost" data-close>Close</button>
@@ -463,6 +492,28 @@
   </div>
 </div>
 
+<!-- Bulk add modal -->
+<div class="overlay" id="bulkModal">
+  <div class="modal" style="max-width:760px">
+    <header><h2>Bulk add boards</h2></header>
+    <div class="body">
+      <p class="hint">Paste board IDs — one per line, or separated by commas or spaces. Each is checked against the
+        <b>Default</b> mapping preset so you can confirm the guesses look right before adding them all. Anything
+        already tracked is unticked by default, since adding it here would overwrite its saved mapping.</p>
+      <textarea id="bulkIds" class="bulk-textarea" rows="4" placeholder="1234567890, 2345678901&#10;3456789012"></textarea>
+      <div style="display:flex;justify-content:flex-end;margin:.7rem 0 1.1rem">
+        <button class="btn primary" id="bulkFetchBtn">Fetch & preview</button>
+      </div>
+      <div id="bulkRows"></div>
+      <div class="msg" id="bulkMsg"></div>
+    </div>
+    <div class="foot">
+      <button class="btn ghost" data-close>Cancel</button>
+      <button class="btn primary" id="bulkAddBtn" disabled>Add boards</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const $ = s => document.querySelector(s);
 const api = {
@@ -470,6 +521,8 @@ const api = {
   columns:   id => fetch('/api/board-columns?id='+encodeURIComponent(id)).then(r=>r.json()),
   saveBoard: b  => fetch('/api/save-board',{method:'POST',body:JSON.stringify(b)}).then(r=>r.json()),
   removeBoard:id=> fetch('/api/remove-board',{method:'POST',body:JSON.stringify({id})}).then(r=>r.json()),
+  exportBoards:()=> fetch('/api/export-boards').then(r=>r.json()),
+  importBoards:store=> fetch('/api/import-boards',{method:'POST',body:JSON.stringify(store)}).then(r=>r.json()),
   sync:      () => fetch('/api/sync',{method:'POST'}).then(r=>r.json()),
   tokenStatus:()=> fetch('/api/token-status').then(r=>r.json()),
   saveToken: t  => fetch('/api/save-token',{method:'POST',body:JSON.stringify({token:t})}).then(r=>r.json()),
@@ -860,6 +913,141 @@ async function removeBoard(id){
   renderTracked();
 }
 
+// ---- export / import board setups ----
+$('#exportBoardsBtn').onclick=async ()=>{
+  const store = await api.exportBoards();
+  if(!Object.keys(store.boards||{}).length){
+    showMsg('manageMsg','No tracked boards to export yet.','err');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(store,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `board-watch-boards-${stamp}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showMsg('manageMsg',`Exported ${Object.keys(store.boards).length} board(s).`,'ok');
+};
+
+$('#importBoardsBtn').onclick=()=>$('#importBoardsFile').click();
+$('#importBoardsFile').onchange=async e=>{
+  const file = e.target.files[0];
+  e.target.value = '';   // allow re-selecting the same file next time
+  if(!file) return;
+  let parsed;
+  try{
+    parsed = JSON.parse(await file.text());
+  }catch(err){
+    showMsg('manageMsg',`Couldn't read "${file.name}" — it's not valid JSON.`,'err');
+    return;
+  }
+  showMsg('manageMsg','<span class="spin"></span>Importing…','ok');
+  const r = await api.importBoards(parsed);
+  if(r.error){ showMsg('manageMsg',r.error,'err'); return; }
+  const bits=[];
+  if(r.added) bits.push(`${r.added} added`);
+  if(r.updated) bits.push(`${r.updated} updated`);
+  if(r.skipped) bits.push(`${r.skipped} skipped (malformed)`);
+  const summary = bits.length ? `Import done — ${bits.join(', ')}.` : 'Import file had nothing usable in it.';
+  if(!r.added && !r.updated){ await load(); renderTracked(); showMsg('manageMsg',summary,'err'); return; }
+  // Pull fresh data for the imported boards right away, same as after saving
+  // a single board's mapping — otherwise they'd sit tracked-but-empty until
+  // the next manual refresh.
+  showMsg('manageMsg',`${summary} Pulling latest from Monday…`,'ok');
+  try{
+    const sr = await api.sync();
+    if(sr.error) throw new Error(sr.error);
+    await load();
+    showMsg('manageMsg',`${summary} Synced.`,'ok');
+  }catch(err){
+    await load();
+    showMsg('manageMsg',`${summary} Sync failed: ${err.message}. Try Refresh from Monday.`,'err');
+  }
+  renderTracked();
+};
+
+// ---- bulk add ----
+let bulkResults = [];
+$('#openBulkBtn').onclick=()=>{
+  $('#bulkIds').value='';
+  $('#bulkRows').innerHTML='';
+  $('#bulkMsg').style.display='none';
+  $('#bulkAddBtn').disabled=true;
+  bulkResults=[];
+  closeModal('manageModal'); openModal('bulkModal');
+};
+
+$('#bulkFetchBtn').onclick=async ()=>{
+  const ids=[...new Set($('#bulkIds').value.split(/[\s,]+/).map(s=>s.trim()).filter(Boolean))];
+  if(!ids.length){ showMsg('bulkMsg','Enter at least one board ID.','err'); return; }
+  $('#bulkAddBtn').disabled=true;
+  $('#bulkRows').innerHTML='';
+  showMsg('bulkMsg',`<span class="spin"></span>Fetching ${ids.length} board(s)…`,'ok');
+  bulkResults = await Promise.all(ids.map(async id=>{
+    try{
+      const board = await api.columns(id);
+      if(board.error) return {id, error: board.error};
+      return {id, name: board.name, columns: board.columns, mapping: board.suggested_mapping||{}};
+    }catch(err){ return {id, error: err.message||'Failed to fetch.'}; }
+  }));
+  renderBulkRows();
+  const ok = bulkResults.filter(r=>!r.error);
+  $('#bulkAddBtn').disabled = !ok.length;
+  showMsg('bulkMsg',
+    `Fetched ${ok.length}/${bulkResults.length}. Review the mapping preview below, tick the ones you want, then Add boards.`,
+    ok.length ? 'ok' : 'err');
+};
+
+function renderBulkRows(){
+  const trackedIds = new Set(STATE.tracked.map(b=>String(b.id)));
+  $('#bulkRows').innerHTML = bulkResults.map(r=>{
+    if(r.error){
+      return `<div class="bulk-row bulk-row-err"><div><b>#${esc(r.id)}</b> — ${esc(r.error)}</div></div>`;
+    }
+    const alreadyTracked = trackedIds.has(String(r.id));
+    const missingCore = !r.mapping.due_date || !r.mapping.status;
+    const byRole={};
+    for(const [role,cid] of Object.entries(r.mapping)){
+      const ids = Array.isArray(cid)?cid:[cid];
+      byRole[role]=ids.map(id=>(r.columns.find(c=>c.id===id)||{}).title||id);
+    }
+    const warn = alreadyTracked
+      ? `<span class="mp-chip mp-warn">Already tracked — adding will overwrite its saved mapping</span>`
+      : (missingCore ? `<span class="mp-chip mp-warn">Missing Due date and/or Status — add anyway and fix in Edit mapping</span>` : '');
+    return `<div class="bulk-row">
+      <input type="checkbox" data-bulk-id="${esc(r.id)}" ${alreadyTracked?'':'checked'}>
+      <div style="flex:1">
+        <div class="cname">${esc(r.name)} <span class="meta">#${esc(r.id)}</span></div>
+        <div class="map-preview" style="margin:.4rem 0 0">${roleChipsHtml(byRole)}${warn}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+$('#bulkAddBtn').onclick=async ()=>{
+  const checked = new Set(Array.from(document.querySelectorAll('#bulkRows input[type=checkbox]:checked')).map(cb=>cb.dataset.bulkId));
+  const toAdd = bulkResults.filter(r=>!r.error && checked.has(r.id));
+  if(!toAdd.length){ showMsg('bulkMsg','Nothing selected to add.','err'); return; }
+  showMsg('bulkMsg',`<span class="spin"></span>Adding ${toAdd.length} board(s)…`,'ok');
+  for(const r of toAdd){
+    await api.saveBoard({id:r.id, name:r.name, columns:r.columns, mapping:r.mapping, mapping_mode:'default', done_labels:['done']});
+  }
+  closeModal('bulkModal');
+  openModal('manageModal');
+  showMsg('manageMsg',`<span class="spin"></span>Added ${toAdd.length} board(s) — pulling latest from Monday…`,'ok');
+  try{
+    const sr = await api.sync();
+    if(sr.error) throw new Error(sr.error);
+    await load();
+    showMsg('manageMsg',`Added and synced ${toAdd.length} board(s).`,'ok');
+  }catch(err){
+    await load();
+    showMsg('manageMsg',`Added ${toAdd.length} board(s), but sync failed: ${err.message}. Try Refresh from Monday.`,'err');
+  }
+  renderTracked();
+};
+
 // ---- column mapping ----
 let mapCtx = null;
 $('#loadColsBtn').onclick=async ()=>{
@@ -900,6 +1088,22 @@ function setMapMode(mode){
   $('#modeCustomBtn').classList.toggle('on', mode==='custom');
 }
 
+const ROLE_LABELS = [
+  ['title','Title'],['person','Owner / Person'],['due_date','Due date'],
+  ['status','Status'],['department','Department'],
+];
+
+// Shared by the single-board mapping preview and the bulk-add preview:
+// `byRole` is {role: [column title, ...]}; renders one chip per role.
+function roleChipsHtml(byRole){
+  return ROLE_LABELS.map(([role,label])=>{
+    const cols = (byRole[role]||[]).map(esc);
+    return cols.length
+      ? `<span class="mp-chip"><b>${label}</b> ← ${cols.join(', ')}</span>`
+      : `<span class="mp-chip mp-empty">${label} — unmapped</span>`;
+  }).join('');
+}
+
 function renderMapPreview(){
   // Shows every column currently pointed at each role, even a duplicate on a
   // unique role Save would reject — so a conflict is visible here first.
@@ -908,16 +1112,7 @@ function renderMapPreview(){
     if(s.value==='ignore') return;
     (byRole[s.value]=byRole[s.value]||[]).push(s.closest('.map-row').querySelector('.cname').textContent);
   });
-  const labels = [
-    ['title','Title'],['person','Owner / Person'],['due_date','Due date'],
-    ['status','Status'],['department','Department'],
-  ];
-  $('#mapPreview').innerHTML = labels.map(([role,label])=>{
-    const cols = (byRole[role]||[]).map(esc);
-    return cols.length
-      ? `<span class="mp-chip"><b>${label}</b> ← ${cols.join(', ')}</span>`
-      : `<span class="mp-chip mp-empty">${label} — unmapped</span>`;
-  }).join('');
+  $('#mapPreview').innerHTML = roleChipsHtml(byRole);
 }
 
 async function beginMapping(id){

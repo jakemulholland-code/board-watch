@@ -3,6 +3,7 @@
 config.json
 data/boards.json
 data/tasks.json
+data/sync_progress.json
 
 # Python
 __pycache__/

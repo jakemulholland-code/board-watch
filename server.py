@@ -12,6 +12,7 @@ Serves the static dashboard and exposes a tiny JSON API so the browser can:
   - remove a board                             POST /api/remove-board
   - export tracked boards + mappings           GET  /api/export-boards
   - import tracked boards + mappings           POST /api/import-boards
+  - poll progress of an in-flight sync         GET  /api/sync-progress
   - trigger a fresh pull from Monday           POST /api/sync
   - post an update (comment) back to Monday     POST /api/post-update
 
@@ -68,6 +69,9 @@ class Handler(BaseHTTPRequestHandler):
 
         if route == "/api/token-status":
             return self._send(200, {"has_token": bool(ms.get_token())})
+
+        if route == "/api/sync-progress":
+            return self._send(200, ms.read_progress())
 
         if route == "/api/export-boards":
             # Hand back the raw tracked-boards store (ids, columns, mapping,

@@ -203,6 +203,17 @@
     padding:.6rem 0;border-bottom:1px solid var(--line)}
   .map-row .cname{font-size:.82rem;color:var(--ink);font-weight:400}
   .map-row .ctype{color:var(--muted2);font-size:.62rem;letter-spacing:.03em}
+  .map-mode{display:flex;align-items:center;gap:.9rem;margin-bottom:1rem;flex-wrap:wrap}
+  .seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line2);border-radius:9px;padding:3px;flex:none}
+  .seg-btn{background:transparent;border:none;color:var(--muted);font-size:.68rem;font-weight:600;
+    letter-spacing:.05em;text-transform:uppercase;padding:.42rem .9rem;border-radius:7px;transition:background .14s,color .14s}
+  .seg-btn.on{background:#fff;color:var(--teal-dark);box-shadow:0 1px 3px rgba(16,24,40,.12)}
+  .seg-btn:not(.on):hover{color:var(--ink)}
+  .map-preview{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.1rem}
+  .map-preview .mp-chip{font-size:.7rem;font-weight:500;color:var(--text);background:var(--surface3);
+    border:1px solid var(--line);border-radius:8px;padding:.32rem .6rem;line-height:1.3}
+  .map-preview .mp-chip b{font-weight:700;color:var(--ink)}
+  .map-preview .mp-chip.mp-empty{color:var(--muted2);font-style:italic;background:none;border-style:dashed}
   .hint{color:var(--muted);font-size:.8rem;margin:0 0 1rem;line-height:1.7;font-weight:400}
   .hint b{color:var(--text);font-weight:600}
   .tracked-item{display:flex;align-items:center;justify-content:space-between;
@@ -420,12 +431,24 @@
   <div class="modal">
     <header><h2 id="mapTitle">Map columns</h2></header>
     <div class="body">
-      <p class="hint">Every column starts unmapped — set each one yourself; nothing is guessed.
-        <b>Due date</b> and <b>Status</b> are required for overdue tracking. <b>Owner / Person</b>
+      <p class="hint"><b>Due date</b> and <b>Status</b> are required for overdue tracking. <b>Owner / Person</b>
         can be set on <b>more than one column</b> — if a board has separate Assignor and Assignee
         columns, mark both and everyone is pooled, so filtering to a person finds every task they're
         on. <b>Department</b> is optional and powers the department filter. Task name is used for the
         title unless you map one to Title.</p>
+
+      <div class="map-mode">
+        <div class="seg" id="mapModeSeg">
+          <button type="button" class="seg-btn" data-mode="default" id="modeDefaultBtn">Default</button>
+          <button type="button" class="seg-btn" data-mode="custom" id="modeCustomBtn">Custom</button>
+        </div>
+        <span class="hint" style="margin:0">Default guesses roles from column names (Assignee/Assignor/Person/Owner
+          → Owner / Person, Due Date → Due date, Status → Status, Name → Title, Department → Department). Change any
+          row below and it switches to Custom automatically — everything else stays as it was.</span>
+      </div>
+
+      <div id="mapPreview" class="map-preview"></div>
+
       <div id="mapRows"></div>
       <div class="field" style="margin-top:16px">
         <label>Status label(s) that count as done</label>
@@ -846,6 +869,57 @@ $('#loadColsBtn').onclick=async ()=>{
 };
 async function editMap(id){ await beginMapping(id); }
 
+function applyMappingToRows(mapping){
+  document.querySelectorAll('#mapRows select').forEach(s=>{
+    let sel='ignore';
+    for(const [role,cid] of Object.entries(mapping||{})){
+      const ids = Array.isArray(cid) ? cid : [cid];
+      if(ids.includes(s.dataset.col)) sel=role;
+    }
+    s.value=sel;
+  });
+}
+
+function readRowMapping(){
+  const mapping={};
+  document.querySelectorAll('#mapRows select').forEach(s=>{
+    const v=s.value;
+    if(v==='ignore') return;
+    if(MULTI_ROLES.includes(v)){
+      (mapping[v]=mapping[v]||[]).push(s.dataset.col);
+    }else if(mapping[v]===undefined){
+      mapping[v]=s.dataset.col;
+    }
+  });
+  return mapping;
+}
+
+function setMapMode(mode){
+  mapCtx.mode = mode;
+  $('#modeDefaultBtn').classList.toggle('on', mode==='default');
+  $('#modeCustomBtn').classList.toggle('on', mode==='custom');
+}
+
+function renderMapPreview(){
+  // Shows every column currently pointed at each role, even a duplicate on a
+  // unique role Save would reject — so a conflict is visible here first.
+  const byRole = {};
+  document.querySelectorAll('#mapRows select').forEach(s=>{
+    if(s.value==='ignore') return;
+    (byRole[s.value]=byRole[s.value]||[]).push(s.closest('.map-row').querySelector('.cname').textContent);
+  });
+  const labels = [
+    ['title','Title'],['person','Owner / Person'],['due_date','Due date'],
+    ['status','Status'],['department','Department'],
+  ];
+  $('#mapPreview').innerHTML = labels.map(([role,label])=>{
+    const cols = (byRole[role]||[]).map(esc);
+    return cols.length
+      ? `<span class="mp-chip"><b>${label}</b> ← ${cols.join(', ')}</span>`
+      : `<span class="mp-chip mp-empty">${label} — unmapped</span>`;
+  }).join('');
+}
+
 async function beginMapping(id){
   showMsg('manageMsg','<span class="spin"></span>Fetching columns…','ok');
   const board = await api.columns(id);
@@ -853,18 +927,21 @@ async function beginMapping(id){
   $('#manageMsg').style.display='none';
 
   const existing = STATE.tracked.find(b=>b.id===String(id));
-  const savedMap = existing?.mapping||{};
+  const savedMap = existing?.mapping;
   const savedDone = existing?.done_labels;
-  mapCtx = {id:String(id), name:board.name, columns:board.columns};
+  const suggested = board.suggested_mapping || {};
+  // New boards start on the Default preset; a board mapped before this toggle
+  // existed falls back to Custom so its saved mapping is never silently
+  // overwritten by the guess.
+  const savedMode = existing?.mapping_mode || (existing ? 'custom' : 'default');
+  mapCtx = {id:String(id), name:board.name, columns:board.columns, suggested, mode:savedMode};
 
   $('#mapTitle').textContent = `Map columns · ${board.name}`;
+  const startMap = (savedMode==='default') ? suggested : (savedMap||{});
   $('#mapRows').innerHTML = board.columns.map(col=>{
-    // Nothing is guessed. When editing an existing board the column keeps the
-    // role you saved before; otherwise it starts on 'ignore'. Your picks are
-    // never changed for you — not on open, not when you touch another row.
     let sel = 'ignore';
-    for(const [role,cid] of Object.entries(savedMap)){
-      const ids = Array.isArray(cid) ? cid : [cid];   // person is a list
+    for(const [role,cid] of Object.entries(startMap)){
+      const ids = Array.isArray(cid) ? cid : [cid];
       if(ids.includes(col.id)) sel=role;
     }
     const opts = ROLE_OPTS.map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');
@@ -874,22 +951,42 @@ async function beginMapping(id){
     </div>`;
   }).join('');
 
-  $('#doneLabels').value = savedDone ? savedDone.join(', ') : '';
+  // Touching any row while on Default flips to Custom — the row you changed
+  // takes your new value, every other row keeps whatever it already showed.
+  document.querySelectorAll('#mapRows select').forEach(s=>{
+    s.addEventListener('change', ()=>{
+      if(mapCtx.mode==='default') setMapMode('custom');
+      renderMapPreview();
+    });
+  });
+
+  setMapMode(savedMode);
+  renderMapPreview();
+
+  $('#doneLabels').value = savedDone ? savedDone.join(', ') : 'Done';
   closeModal('manageModal'); openModal('mapModal');
 }
 
+$('#modeDefaultBtn').onclick=()=>{
+  if(mapCtx.mode==='default') return;
+  applyMappingToRows(mapCtx.suggested);
+  setMapMode('default');
+  renderMapPreview();
+};
+$('#modeCustomBtn').onclick=()=>{
+  // Custom doesn't change any values — it's just an explicit label for "this
+  // is no longer the preset", same as touching a row would set.
+  setMapMode('custom');
+};
+
 $('#saveMapBtn').onclick=async ()=>{
-  const mapping={};
+  const mapping = readRowMapping();
   const dupes=[];
+  const seen=new Set();
   document.querySelectorAll('#mapRows select').forEach(s=>{
     const v=s.value;
-    if(v==='ignore') return;
-    if(MULTI_ROLES.includes(v)){
-      (mapping[v]=mapping[v]||[]).push(s.dataset.col);   // pool multiple columns
-    }else{
-      if(mapping[v]!==undefined) dupes.push(v);
-      mapping[v]=s.dataset.col;
-    }
+    if(v==='ignore'||MULTI_ROLES.includes(v)) return;
+    if(seen.has(v)) dupes.push(v); else seen.add(v);
   });
   if(dupes.length){
     const names={title:'Title',due_date:'Due date',status:'Status',department:'Department'};
@@ -902,7 +999,7 @@ $('#saveMapBtn').onclick=async ()=>{
     return;
   }
   const done_labels = $('#doneLabels').value.split(',').map(s=>s.trim()).filter(Boolean);
-  await api.saveBoard({id:mapCtx.id, name:mapCtx.name, columns:mapCtx.columns, mapping, done_labels});
+  await api.saveBoard({id:mapCtx.id, name:mapCtx.name, columns:mapCtx.columns, mapping, mapping_mode:mapCtx.mode, done_labels});
   closeModal('mapModal');
   $('#newBoardId').value='';
   // Pull fresh data straight away so newly-mapped columns (e.g. Department)

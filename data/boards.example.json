@@ -15,6 +15,7 @@
         "due_date": "date4",
         "status": "status"
       },
+      "mapping_mode": "default",
       "done_labels": ["done"]
     }
   }

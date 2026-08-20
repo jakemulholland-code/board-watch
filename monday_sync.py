@@ -156,7 +156,7 @@ def load_settings():
     #  - excluded_departments: drop tasks whose Department is in this list
     #    (case-insensitive). Tasks with no due date are always kept.
     cfg.setdefault("lookback_months", 4)
-    cfg.setdefault("excluded_departments", ["PPC", "Paid Social"])
+    cfg.setdefault("excluded_departments", ["PPC", "Paid Social", "Comms", "Development"])
     # Your Monday account slug — the "yourcompany" in yourcompany.monday.com.
     # Used to build "Open in Monday" links straight to each item.
     cfg.setdefault("monday_account", "paramount-digital-ltd")

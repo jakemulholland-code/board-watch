@@ -611,6 +611,20 @@ const api = {
   postUpdate: (item_id,text,mentions)=> call(`Posting update to item ${item_id}`, '/api/post-update',{method:'POST',body:JSON.stringify({item_id,text,mentions})}),
 };
 
+// Makes a button visibly react the instant it's clicked — disabled + a
+// spinner + a busy label — regardless of how long the actual work takes, so
+// a click never feels like it did nothing. Restores whatever the button
+// showed before, success or failure.
+function withBusy(btn, busyLabel, fn){
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span>${busyLabel}`;
+  return (async ()=>{
+    try{ return await fn(); }
+    finally{ btn.disabled = false; btn.innerHTML = old; }
+  })();
+}
+
 let STATE = {tasks:[], boards:[], people:[], tracked:[]};
 let sort = {k:'due_date', dir:1};
 let hiddenStatuses = new Set();   // statuses unticked in the Status filter (hidden)
@@ -983,20 +997,22 @@ function renderTracked(){
     <div class="tracked-item">
       <div><b>${esc(b.name)}</b> <span class="meta">#${b.id}</span></div>
       <div>
-        <button class="btn ghost" style="padding:5px 10px;font-size:12px" onclick="editMap('${b.id}')">Edit mapping</button>
-        <button class="link" onclick="removeBoard('${b.id}')">Remove</button>
+        <button class="btn ghost" style="padding:5px 10px;font-size:12px" onclick="editMap('${b.id}',this)">Edit mapping</button>
+        <button class="link" onclick="removeBoard('${b.id}',this)">Remove</button>
       </div>
     </div>`).join('');
 }
-async function removeBoard(id){
+function removeBoard(id, btn){
   if(!confirm('Stop tracking this board? Its tasks are removed from the dashboard right away.')) return;
-  await api.removeBoard(id);
-  await load();          // refresh table + filters from the pruned data
-  renderTracked();
+  return withBusy(btn,'Removing…', async ()=>{
+    await api.removeBoard(id);
+    await load();          // refresh table + filters from the pruned data
+    renderTracked();
+  });
 }
 
 // ---- export / import board setups ----
-$('#exportBoardsBtn').onclick=async ()=>{
+$('#exportBoardsBtn').onclick=()=> withBusy($('#exportBoardsBtn'),'Exporting…', async ()=>{
   const store = await api.exportBoards();
   if(!Object.keys(store.boards||{}).length){
     showMsg('manageMsg','No tracked boards to export yet.','err');
@@ -1010,43 +1026,45 @@ $('#exportBoardsBtn').onclick=async ()=>{
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
   showMsg('manageMsg',`Exported ${Object.keys(store.boards).length} board(s).`,'ok');
-};
+});
 
 $('#importBoardsBtn').onclick=()=>$('#importBoardsFile').click();
-$('#importBoardsFile').onchange=async e=>{
+$('#importBoardsFile').onchange=e=>{
   const file = e.target.files[0];
   e.target.value = '';   // allow re-selecting the same file next time
   if(!file) return;
-  let parsed;
-  try{
-    parsed = JSON.parse(await file.text());
-  }catch(err){
-    showMsg('manageMsg',`Couldn't read "${file.name}" — it's not valid JSON.`,'err');
-    return;
-  }
-  showMsg('manageMsg','<span class="spin"></span>Importing…','ok');
-  const r = await api.importBoards(parsed);
-  if(r.error){ showMsg('manageMsg',r.error,'err'); return; }
-  const bits=[];
-  if(r.added) bits.push(`${r.added} added`);
-  if(r.updated) bits.push(`${r.updated} updated`);
-  if(r.skipped) bits.push(`${r.skipped} skipped (malformed)`);
-  const summary = bits.length ? `Import done — ${bits.join(', ')}.` : 'Import file had nothing usable in it.';
-  if(!r.added && !r.updated){ await load(); renderTracked(); showMsg('manageMsg',summary,'err'); return; }
-  // Pull fresh data for the imported boards right away, same as after saving
-  // a single board's mapping — otherwise they'd sit tracked-but-empty until
-  // the next manual refresh.
-  showMsg('manageMsg',`${summary} Pulling latest from Monday…`,'ok');
-  try{
-    const sr = await api.sync();
-    if(sr.error) throw new Error(sr.error);
-    await load();
-    showMsg('manageMsg',`${summary} Synced.`,'ok');
-  }catch(err){
-    await load();
-    showMsg('manageMsg',`${summary} Sync failed: ${err.message}. Try Refresh from Monday.`,'err');
-  }
-  renderTracked();
+  withBusy($('#importBoardsBtn'),'Importing…', async ()=>{
+    let parsed;
+    try{
+      parsed = JSON.parse(await file.text());
+    }catch(err){
+      showMsg('manageMsg',`Couldn't read "${file.name}" — it's not valid JSON.`,'err');
+      return;
+    }
+    showMsg('manageMsg','<span class="spin"></span>Importing…','ok');
+    const r = await api.importBoards(parsed);
+    if(r.error){ showMsg('manageMsg',r.error,'err'); return; }
+    const bits=[];
+    if(r.added) bits.push(`${r.added} added`);
+    if(r.updated) bits.push(`${r.updated} updated`);
+    if(r.skipped) bits.push(`${r.skipped} skipped (malformed)`);
+    const summary = bits.length ? `Import done — ${bits.join(', ')}.` : 'Import file had nothing usable in it.';
+    if(!r.added && !r.updated){ await load(); renderTracked(); showMsg('manageMsg',summary,'err'); return; }
+    // Pull fresh data for the imported boards right away, same as after saving
+    // a single board's mapping — otherwise they'd sit tracked-but-empty until
+    // the next manual refresh.
+    showMsg('manageMsg',`${summary} Pulling latest from Monday…`,'ok');
+    try{
+      const sr = await api.sync();
+      if(sr.error) throw new Error(sr.error);
+      await load();
+      showMsg('manageMsg',`${summary} Synced.`,'ok');
+    }catch(err){
+      await load();
+      showMsg('manageMsg',`${summary} Sync failed: ${err.message}. Try Refresh from Monday.`,'err');
+    }
+    renderTracked();
+  });
 };
 
 // ---- bulk add ----
@@ -1060,7 +1078,7 @@ $('#openBulkBtn').onclick=()=>{
   closeModal('manageModal'); openModal('bulkModal');
 };
 
-$('#bulkFetchBtn').onclick=async ()=>{
+$('#bulkFetchBtn').onclick=()=> withBusy($('#bulkFetchBtn'),'Fetching…', async ()=>{
   const ids=[...new Set($('#bulkIds').value.split(/[\s,]+/).map(s=>s.trim()).filter(Boolean))];
   if(!ids.length){ showMsg('bulkMsg','Enter at least one board ID.','err'); return; }
   $('#bulkAddBtn').disabled=true;
@@ -1079,7 +1097,7 @@ $('#bulkFetchBtn').onclick=async ()=>{
   showMsg('bulkMsg',
     `Fetched ${ok.length}/${bulkResults.length}. Review the mapping preview below, tick the ones you want, then Add boards.`,
     ok.length ? 'ok' : 'err');
-};
+});
 
 function renderBulkRows(){
   const trackedIds = new Set(STATE.tracked.map(b=>String(b.id)));
@@ -1107,12 +1125,13 @@ function renderBulkRows(){
   }).join('');
 }
 
-$('#bulkAddBtn').onclick=async ()=>{
+$('#bulkAddBtn').onclick=()=> withBusy($('#bulkAddBtn'),'Adding…', async ()=>{
   const checked = new Set(Array.from(document.querySelectorAll('#bulkRows input[type=checkbox]:checked')).map(cb=>cb.dataset.bulkId));
   const toAdd = bulkResults.filter(r=>!r.error && checked.has(r.id));
   if(!toAdd.length){ showMsg('bulkMsg','Nothing selected to add.','err'); return; }
   showMsg('bulkMsg',`<span class="spin"></span>Adding ${toAdd.length} board(s)…`,'ok');
-  for(const r of toAdd){
+  for(const [i,r] of toAdd.entries()){
+    showMsg('bulkMsg',`<span class="spin"></span>Adding board ${i+1}/${toAdd.length} — "${esc(r.name)}"…`,'ok');
     await api.saveBoard({id:r.id, name:r.name, columns:r.columns, mapping:r.mapping, mapping_mode:'default', done_labels:['done']});
   }
   closeModal('bulkModal');
@@ -1128,16 +1147,18 @@ $('#bulkAddBtn').onclick=async ()=>{
     showMsg('manageMsg',`Added ${toAdd.length} board(s), but sync failed: ${err.message}. Try Refresh from Monday.`,'err');
   }
   renderTracked();
-};
+});
 
 // ---- column mapping ----
 let mapCtx = null;
-$('#loadColsBtn').onclick=async ()=>{
+$('#loadColsBtn').onclick=()=> withBusy($('#loadColsBtn'),'Loading…', async ()=>{
   const id=$('#newBoardId').value.trim();
   if(!id){ showMsg('manageMsg','Enter a board ID.','err'); return; }
   await beginMapping(id);
-};
-async function editMap(id){ await beginMapping(id); }
+});
+function editMap(id, btn){
+  return btn ? withBusy(btn,'Loading…', ()=>beginMapping(id)) : beginMapping(id);
+}
 
 function applyMappingToRows(mapping){
   document.querySelectorAll('#mapRows select').forEach(s=>{
@@ -1256,7 +1277,7 @@ $('#modeCustomBtn').onclick=()=>{
   setMapMode('custom');
 };
 
-$('#saveMapBtn').onclick=async ()=>{
+$('#saveMapBtn').onclick=()=> withBusy($('#saveMapBtn'),'Saving…', async ()=>{
   const mapping = readRowMapping();
   const dupes=[];
   const seen=new Set();
@@ -1292,7 +1313,7 @@ $('#saveMapBtn').onclick=async ()=>{
     showMsg('manageMsg',`Saved “${mapCtx.name}”, but the sync failed: ${err.message}. Try Refresh from Monday.`,'err');
   }
   renderTracked(); openModal('manageModal');
-};
+});
 
 function showMsg(id,html,cls){ const m=$('#'+id); m.className='msg '+cls; m.innerHTML=html; }
 

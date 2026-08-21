@@ -121,7 +121,11 @@
     margin-bottom:var(--sp-4);box-shadow:var(--shadow-card)}
   .cap-person-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:var(--sp-4);gap:1rem;flex-wrap:wrap}
   .cap-person-name{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:.55rem}
-  .cap-person-total{font-size:12px;color:var(--muted);white-space:nowrap}
+  .cap-person-total{font-size:12px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:.7rem}
+  .cap-shot-btn{background:none;border:1px solid var(--line2);color:var(--muted2);width:26px;height:26px;flex:none;
+    border-radius:var(--r-control);display:inline-flex;align-items:center;justify-content:center;transition:border-color .14s,color .14s}
+  .cap-shot-btn:hover{border-color:var(--teal-dark);color:var(--teal-dark)}
+  .cap-shot-btn.busy{opacity:.5;pointer-events:none}
   .cap-section-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.6rem}
   .cap-badges,.cap-labels,.cap-cols{display:flex;gap:.5rem}
   .cap-badges>div,.cap-labels>div,.cap-col{flex:1;min-width:0;text-align:center}
@@ -278,6 +282,167 @@ const api = {
   sync: () => fetch('/api/sync',{method:'POST'}).then(r=>r.json()),
   teams: () => fetch('/api/teams').then(r=>r.json()),
 };
+
+// ---- "save chart as image" ----
+// Redraws one person's capacity chart straight from its data (capState) onto
+// a canvas, rather than rasterizing the live DOM: the DOM route (SVG
+// <foreignObject> -> canvas) gets marked "tainted" by Chrome the moment the
+// content references the Google-Fonts webfonts, which blocks toDataURL(). A
+// from-data redraw sidesteps that entirely and produces a crisper, on-brand
+// PNG besides.
+function downloadDataUrl(dataUrl, filename){
+  const a = document.createElement('a');
+  a.href = dataUrl; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function deliveryColor(deliveredHours, total){
+  const cls = deliveryClass(deliveredHours, total);
+  return {'cap-light':'#a3a3a3','cap-good':'#008475','cap-mixed':'#E8A828','cap-slipped':'#DA1A50'}[cls];
+}
+function loadBarColor(ratio){
+  if(ratio>1) return '#DA1A50';
+  if(ratio<0.4) return '#a3a3a3';
+  return '#01C6A3';
+}
+function renderCapacityChartCanvas(person){
+  const {upcoming, history, capacityPerWeek, scaleMax, splitBoard, weeksCount, weeksBack} = capState;
+  const buckets = upcoming.perPerson[person];
+  const weeks = upcoming.weeks;
+  const hasHistory = weeksBack>0 && history && history.perPerson[person];
+  const historyBuckets = hasHistory ? history.perPerson[person] : [];
+  const historyWeeks = hasHistory ? history.weeks : [];
+
+  const PAD=28, COL_W=76, GAP=14, PLOT_H=160, LABEL_H=40, BADGE_H=20, SECTION_LABEL_H=22, HEADER_H=54, SECTION_GAP=26;
+  const cols = Math.max(weeks.length, historyWeeks.length);
+  const plotWidth = cols*COL_W + (cols-1)*GAP;
+  const width = PAD*2 + plotWidth;
+  let height = PAD + HEADER_H + SECTION_LABEL_H + BADGE_H + PLOT_H + LABEL_H;
+  if(hasHistory) height += SECTION_GAP + SECTION_LABEL_H + BADGE_H + PLOT_H + LABEL_H;
+  height += PAD;
+
+  const scale = 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(width*scale); canvas.height = Math.round(height*scale);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height);
+
+  let y = PAD;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#1a1a1a';
+  ctx.font = '700 20px Georgia, serif';
+  ctx.fillText(person, PAD, y+20);
+  const totalAll = buckets.reduce((s,b)=>s+b.total, 0);
+  const avg = totalAll/weeksCount;
+  const totalsText = `Next ${weeksCount}w: ${totalAll.toFixed(1)}h total · avg ${avg.toFixed(1)}h/wk`;
+  ctx.font = '400 12px sans-serif'; ctx.fillStyle = '#6a6a6a';
+  ctx.textAlign = 'right';
+  ctx.fillText(totalsText, PAD+plotWidth, y+18);
+  ctx.textAlign = 'left';
+  y += HEADER_H;
+
+  const drawSection = (label, colsData, colsWeeks, isHistory) => {
+    ctx.font = '600 11px sans-serif'; ctx.fillStyle = '#6a6a6a';
+    ctx.fillText(label.toUpperCase(), PAD, y+10);
+    y += SECTION_LABEL_H;
+
+    ctx.font = '700 11px sans-serif'; ctx.textAlign = 'center';
+    colsWeeks.forEach((w,i)=>{
+      const b = colsData[i];
+      const cx = PAD + i*(COL_W+GAP) + COL_W/2;
+      let text='', color='#6a6a6a';
+      if(!isHistory){
+        text = b.total ? b.total.toFixed(1)+'h' : '';
+        color = loadBarColor(b.total/capacityPerWeek);
+      } else {
+        const total = b.onTimeHours+b.lateHours+b.doneUnknownHours+b.outstandingHours;
+        const delivered = b.onTimeHours+b.lateHours+b.doneUnknownHours;
+        text = total ? `${delivered.toFixed(1)}/${total.toFixed(1)}h` : '';
+        color = deliveryColor(b.onTimeHours, total);
+      }
+      ctx.fillStyle = color;
+      ctx.fillText(text, cx, y+10);
+    });
+    y += BADGE_H;
+
+    const plotTop = y;
+    const capPx = Math.round(capacityPerWeek/scaleMax*PLOT_H);
+    ctx.setLineDash([4,3]);
+    ctx.strokeStyle = '#a3a3a3';
+    ctx.beginPath();
+    ctx.moveTo(PAD, plotTop+PLOT_H-capPx);
+    ctx.lineTo(PAD+plotWidth, plotTop+PLOT_H-capPx);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '600 11px sans-serif'; ctx.fillStyle = '#a3a3a3'; ctx.textAlign = 'right';
+    ctx.fillText(`${capacityPerWeek}h cap`, PAD+plotWidth, plotTop+PLOT_H-capPx-6);
+    ctx.textAlign = 'left';
+
+    colsWeeks.forEach((w,i)=>{
+      const b = colsData[i];
+      const cx = PAD + i*(COL_W+GAP);
+      const barBottom = plotTop+PLOT_H;
+      if(!isHistory){
+        if(splitBoard){
+          let cursor = barBottom;
+          Object.entries(b.byBoard).sort((a,z)=>z[1]-a[1]).forEach(([bn,h])=>{
+            const hpx = Math.round(h/scaleMax*PLOT_H);
+            ctx.fillStyle = boardColor(bn);
+            ctx.fillRect(cx, cursor-hpx, COL_W, hpx);
+            cursor -= hpx;
+          });
+        } else if(b.total){
+          const hpx = Math.round(b.total/scaleMax*PLOT_H);
+          ctx.fillStyle = loadBarColor(b.total/capacityPerWeek);
+          ctx.fillRect(cx, barBottom-hpx, COL_W, hpx);
+        }
+      } else {
+        let cursor = barBottom;
+        [[b.onTimeHours,'#01C6A3'],[b.lateHours,'#E8A828'],[b.doneUnknownHours,'#a3a3a3'],[b.outstandingHours,'#DA1A50']].forEach(([h,color])=>{
+          if(!h) return;
+          const hpx = Math.round(h/scaleMax*PLOT_H);
+          ctx.fillStyle = color;
+          ctx.fillRect(cx, cursor-hpx, COL_W, hpx);
+          cursor -= hpx;
+        });
+      }
+    });
+    y += PLOT_H+8;
+
+    ctx.font = '400 11px sans-serif'; ctx.fillStyle = '#a3a3a3'; ctx.textAlign = 'center';
+    colsWeeks.forEach((w,i)=>{
+      const cx = PAD + i*(COL_W+GAP) + COL_W/2;
+      ctx.fillText(fmtWeekLabel(w), cx, y+10);
+      if(!isHistory && colsData[i].overdueCount){
+        ctx.fillStyle = '#DA1A50'; ctx.font = '700 11px sans-serif';
+        ctx.fillText(`${colsData[i].overdueCount} overdue (${colsData[i].overdueHours.toFixed(1)}h)`, cx, y+24);
+        ctx.fillStyle = '#a3a3a3'; ctx.font = '400 11px sans-serif';
+      }
+    });
+    ctx.textAlign = 'left';
+    y += LABEL_H;
+  };
+
+  drawSection('Upcoming', buckets, weeks, false);
+  if(hasHistory){
+    y += SECTION_GAP;
+    drawSection(`Recent ${weeksBack}w — planned vs delivered`, historyBuckets, historyWeeks, true);
+  }
+
+  return canvas;
+}
+$('#capBody').addEventListener('click', e=>{
+  const btn = e.target.closest('.cap-shot-btn');
+  if(!btn) return;
+  const person = btn.dataset.person;
+  try{
+    const canvas = renderCapacityChartCanvas(person);
+    downloadDataUrl(canvas.toDataURL('image/png'), `capacity-${person.replace(/[^\w-]+/g,'_')}-${STATE.today}.png`);
+  }catch(err){
+    console.error(err);
+    alert('Could not generate the image: '+err.message);
+  }
+});
 
 let STATE = {tasks:[], people:[], today:new Date().toISOString().slice(0,10), hours_per_day:7, work_days_per_week:5};
 
@@ -494,6 +659,7 @@ function renderCapacityView(){
   });
   const scaleMax = maxTotal*1.15;
   const capPx = Math.round(capacityPerWeek/scaleMax*CAP_CHART_H);
+  Object.assign(capState, {capacityPerWeek, scaleMax, splitBoard, weeksCount, weeksBack});
   const loadColorVar = {'cap-over':'var(--red)','cap-light':'var(--muted2)','cap-ok':'var(--teal)'};
 
   const boardList = [...upcoming.boardsUsed].sort();
@@ -583,7 +749,14 @@ function renderCapacityView(){
     return `<div class="cap-person">
       <div class="cap-person-head">
         <div class="cap-person-name"><span class="avatar" style="background:${avatarColor(p)}">${initials(p)}</span>${esc(p)}</div>
-        <div class="cap-person-total">Next ${weeksCount}w: ${totalAll.toFixed(1)}h total · avg ${avg.toFixed(1)}h/wk</div>
+        <div class="cap-person-total">Next ${weeksCount}w: ${totalAll.toFixed(1)}h total · avg ${avg.toFixed(1)}h/wk
+          <button type="button" class="cap-shot-btn" data-person="${esc(p)}" title="Save this chart as an image">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
+              <path d="M2 5.5A1.5 1.5 0 0 1 3.5 4h1.6l.6-1.1A1.2 1.2 0 0 1 6.75 2.3h2.5a1.2 1.2 0 0 1 1.05.6L10.9 4h1.6A1.5 1.5 0 0 1 14 5.5v6A1.5 1.5 0 0 1 12.5 13h-9A1.5 1.5 0 0 1 2 11.5v-6Z" stroke="currentColor" stroke-width="1.2"/>
+              <circle cx="8" cy="8.2" r="2.15" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="cap-section-label">Upcoming</div>
       <div class="cap-track">

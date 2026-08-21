@@ -31,7 +31,7 @@ from urllib.parse import urlparse, parse_qs
 import monday_sync as ms
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PORT = 8765
+PORT = int(os.environ.get("PORT", 8765))
 
 
 def read_body(handler):

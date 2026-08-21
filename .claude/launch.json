@@ -5,7 +5,8 @@
       "name": "board-watch",
       "runtimeExecutable": "python",
       "runtimeArgs": ["server.py"],
-      "port": 8765
+      "port": 8765,
+      "autoPort": true
     }
   ]
 }

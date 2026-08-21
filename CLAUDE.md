@@ -28,8 +28,10 @@ Data flow: `monday_sync.py` (pull) → `data/tasks.json` → `server.py` → bro
 - `config.json` — non-secret settings; created from `config.example.json`.
 - `data/boards.json` — the user's tracked boards + column mappings.
 - `data/tasks.json` — the synced task cache.
+- `data/teams.json` — named groups of boards + people, used as a dashboard filter.
 
-`config.example.json` and `data/boards.example.json` document the shapes.
+`config.example.json`, `data/boards.example.json`, and `data/teams.example.json`
+document the shapes.
 
 ## Running / testing
 

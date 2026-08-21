@@ -69,6 +69,10 @@
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%23a3a3a3' stroke-width='1.4' fill='none'/></svg>");
     background-repeat:no-repeat;background-position:right .8rem center;}
   select:focus{outline:none;border-color:var(--teal);color:var(--ink)}
+  input[type=text]{background:#fff;border:1px solid var(--line2);color:var(--text);font-family:var(--sans);
+    padding:.55rem .8rem;border-radius:9px;font-size:.8rem;font-weight:400;width:100%;transition:border-color .14s}
+  input[type=text]:focus{outline:none;border-color:var(--teal)}
+  input::placeholder{color:var(--muted2)}
   .chk{display:flex;align-items:center;gap:.5rem;color:var(--muted);font-size:.8rem;
     padding-bottom:.55rem;cursor:pointer;user-select:none;font-weight:400}
   .chk input{accent-color:var(--teal-dark);width:15px;height:15px}
@@ -194,6 +198,10 @@
     to see the tasks behind it.</p>
 
   <div class="mgmt-controls">
+    <div class="field" id="teamQuickField" style="display:none">
+      <label>Team</label>
+      <select id="capTeam"><option value="">Quick-select a team's people…</option></select>
+    </div>
     <div class="field">
       <label>People</label>
       <div class="multi">
@@ -220,6 +228,10 @@
     <label class="chk" style="padding-bottom:.55rem">
       <input type="checkbox" id="capSplitBoard" checked> Split by board
     </label>
+    <div class="field" style="flex:1;min-width:220px">
+      <label>Task name contains</label>
+      <input type="text" id="capHideNames" placeholder="e.g. Guest post, Newsletter — hides matching tasks">
+    </div>
   </div>
 
   <div id="capLegend" class="cap-legend"></div>
@@ -256,6 +268,7 @@ const boardColor = name => {
 const api = {
   data: () => fetch('/api/data').then(r=>r.json()),
   sync: () => fetch('/api/sync',{method:'POST'}).then(r=>r.json()),
+  teams: () => fetch('/api/teams').then(r=>r.json()),
 };
 
 let STATE = {tasks:[], people:[], today:new Date().toISOString().slice(0,10), hours_per_day:7, work_days_per_week:5};
@@ -330,7 +343,17 @@ function loadStatusClass(ratio){
 // Buckets every open, hour-mapped, dated task for the given people into
 // Monday-start weeks starting from this week. Overdue open tasks land in
 // week 0 (this week) rather than being dropped, since they still need doing.
-function computeCapacity(peopleNames, weeksCount){
+// Case-insensitive substring match against any of a set of hide keywords —
+// used to drop recurring task types (e.g. "Guest post") whose Hours value
+// doesn't reflect real effort and would otherwise skew the whole chart.
+function matchesHideFilter(title, keywords){
+  if(!keywords.length) return false;
+  const t = (title||'').toLowerCase();
+  return keywords.some(k=>t.includes(k));
+}
+
+function computeCapacity(peopleNames, weeksCount, hideKeywords){
+  hideKeywords = hideKeywords||[];
   const wk0 = mondayOf(STATE.today);
   const todayDate = new Date(STATE.today+'T00:00:00');
   const weeks = [];
@@ -340,10 +363,11 @@ function computeCapacity(peopleNames, weeksCount){
     {total:0, byBoard:{}, overdueHours:0, overdueCount:0, dueHours:0, dueCount:0, tasks:[]}
   )));
   const boardsUsed = new Set();
-  let excludedNoHours=0, excludedNoDate=0, excludedBeyond=0;
+  let excludedNoHours=0, excludedNoDate=0, excludedBeyond=0, excludedByName=0, excludedByNameHours=0;
 
   (STATE.tasks||[]).forEach(t=>{
     if(t.is_done) return;
+    if(matchesHideFilter(t.title, hideKeywords)){ excludedByName++; excludedByNameHours+=(t.hours||0); return; }
     if(t.hours==null || t.hours<=0){ excludedNoHours++; return; }
     if(!t.due_date){ excludedNoDate++; return; }
     const names = (t.people&&t.people.length) ? t.people : [t.person];
@@ -364,7 +388,7 @@ function computeCapacity(peopleNames, weeksCount){
       bucket.tasks.push({id:t.id, title:t.title, board_name:t.board_name, hours:t.hours, due_date:t.due_date, overdue:isOverdue});
     });
   });
-  return {weeks, perPerson, boardsUsed, excludedNoHours, excludedNoDate, excludedBeyond};
+  return {weeks, perPerson, boardsUsed, excludedNoHours, excludedNoDate, excludedBeyond, excludedByName, excludedByNameHours};
 }
 
 // Looks back over weeks strictly before this week: for tasks due in that
@@ -374,7 +398,8 @@ function computeCapacity(peopleNames, weeksCount){
 //  - doneUnknown: done, but no Completed date is mapped so on-time/late
 //                 can't be told apart — kept distinct rather than guessed
 //  - outstanding: not done — i.e. slipped past its week and still open
-function computeHistory(peopleNames, weeksBack){
+function computeHistory(peopleNames, weeksBack, hideKeywords){
+  hideKeywords = hideKeywords||[];
   const wk0 = mondayOf(STATE.today);
   const weeks = [];
   for(let i=weeksBack;i>=1;i--) weeks.push(addDays(wk0,-i*7));
@@ -386,6 +411,7 @@ function computeHistory(peopleNames, weeksBack){
   if(!weeksBack) return {weeks, perPerson};
 
   (STATE.tasks||[]).forEach(t=>{
+    if(matchesHideFilter(t.title, hideKeywords)) return;
     if(t.hours==null || t.hours<=0) return;
     if(!t.due_date) return;
     const names = (t.people&&t.people.length) ? t.people : [t.person];
@@ -421,11 +447,18 @@ function deliveryClass(deliveredHours, total){
   return 'cap-mixed';
 }
 
+const HIDE_NAMES_KEY = 'boardwatch_mgmt_hide_names';
+function getHideKeywords(){
+  return $('#capHideNames').value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+}
+
 function renderCapacityView(){
   const people = [...capSelectedPeople].sort();
   const weeksCount = parseInt($('#capWeeks').value,10);
   const weeksBack = parseInt($('#capHistoryWeeks').value,10);
   const splitBoard = $('#capSplitBoard').checked;
+  const hideKeywords = getHideKeywords();
+  localStorage.setItem(HIDE_NAMES_KEY, $('#capHideNames').value);
   const hpd = STATE.hours_per_day||7, dpw = STATE.work_days_per_week||5;
   const capacityPerWeek = hpd*dpw;
   $('#capAssumption').textContent = `${hpd}h × ${dpw} days = ${capacityPerWeek}h/week`;
@@ -439,8 +472,8 @@ function renderCapacityView(){
     return;
   }
 
-  const upcoming = computeCapacity(people, weeksCount);
-  const history = computeHistory(people, weeksBack);
+  const upcoming = computeCapacity(people, weeksCount, hideKeywords);
+  const history = computeHistory(people, weeksBack, hideKeywords);
   capState = {upcoming, history};
 
   // One shared scale across both charts and every selected person, so bar
@@ -565,6 +598,7 @@ function renderCapacityView(){
   });
 
   const excludedBits=[];
+  if(upcoming.excludedByName) excludedBits.push(`${upcoming.excludedByName} task(s) hidden by name filter (${upcoming.excludedByNameHours.toFixed(1)}h)`);
   if(upcoming.excludedNoHours) excludedBits.push(`${upcoming.excludedNoHours} task(s) with no Hours`);
   if(upcoming.excludedNoDate) excludedBits.push(`${upcoming.excludedNoDate} with no Due date`);
   if(upcoming.excludedBeyond) excludedBits.push(`${upcoming.excludedBeyond} due beyond the ${weeksCount}-week window`);
@@ -613,6 +647,26 @@ $('#capDetailClose').onclick=()=>{
   if(capSelectedCol){ capSelectedCol.classList.remove('selected'); capSelectedCol=null; }
 };
 
+// Quick-selects a team's people into the People checkboxes — it's a
+// one-shot action, not a persistent filter, since "team" here just means
+// "whose rows do I want to see"; picks can still be tweaked afterward.
+function buildTeamQuickSelect(){
+  const teams = Object.values(STATE.teams||{});
+  $('#teamQuickField').style.display = teams.length ? '' : 'none';
+  const sel = $('#capTeam');
+  sel.innerHTML = '<option value="">Quick-select a team\'s people…</option>'
+    + teams.map(tm=>`<option value="${esc(tm.id)}">${esc(tm.name)}</option>`).join('');
+}
+$('#capTeam').addEventListener('change', ()=>{
+  const tm = STATE.teams[$('#capTeam').value];
+  $('#capTeam').value = '';
+  if(!tm) return;
+  const valid = (tm.people||[]).filter(p=>(STATE.people||[]).includes(p));
+  capSelectedPeople = new Set(valid);
+  buildCapPeopleMenu();
+  renderCapacityView();
+});
+
 function updateCapPeopleBtn(){
   const n = capSelectedPeople.size, all = (STATE.people||[]).length;
   const btn = $('#capPeopleBtn');
@@ -632,7 +686,8 @@ function buildCapPeopleMenu(){
     `<div class="mm-actions">
        <button type="button" id="capAll">Select all</button>
        <button type="button" id="capNone">Clear all</button>
-     </div>` +
+     </div>
+     <input type="text" id="capPeopleSearch" placeholder="Search people…" style="margin-bottom:6px">` +
     people.map(p=>`
       <label class="multi-opt">
         <input type="checkbox" value="${esc(p)}" ${capSelectedPeople.has(p)?'checked':''}>
@@ -646,9 +701,15 @@ function buildCapPeopleMenu(){
     });
   });
   $('#capAll').onclick=()=>{ people.forEach(p=>capSelectedPeople.add(p));
-    menu.querySelectorAll('input').forEach(cb=>cb.checked=true); updateCapPeopleBtn(); renderCapacityView(); };
+    menu.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=true); updateCapPeopleBtn(); renderCapacityView(); };
   $('#capNone').onclick=()=>{ capSelectedPeople.clear();
-    menu.querySelectorAll('input').forEach(cb=>cb.checked=false); updateCapPeopleBtn(); renderCapacityView(); };
+    menu.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false); updateCapPeopleBtn(); renderCapacityView(); };
+  $('#capPeopleSearch').addEventListener('input', e=>{
+    const q = e.target.value.toLowerCase();
+    menu.querySelectorAll('.multi-opt').forEach(opt=>{
+      opt.style.display = opt.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
 
   updateCapPeopleBtn();
 }
@@ -659,9 +720,18 @@ document.addEventListener('click',e=>{
 $('#capWeeks').addEventListener('change', renderCapacityView);
 $('#capHistoryWeeks').addEventListener('change', renderCapacityView);
 $('#capSplitBoard').addEventListener('change', renderCapacityView);
+let hideNamesDebounce = null;
+$('#capHideNames').addEventListener('input', ()=>{
+  clearTimeout(hideNamesDebounce);
+  hideNamesDebounce = setTimeout(renderCapacityView, 250);
+});
 
 async function load(){
   STATE = await api.data();
+  STATE.teams = (await api.teams()).teams || {};
+  buildTeamQuickSelect();
+  const savedHideNames = localStorage.getItem(HIDE_NAMES_KEY);
+  if(savedHideNames!=null) $('#capHideNames').value = savedHideNames;
   buildCapPeopleMenu();
   renderCapacityView();
 }

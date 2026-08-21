@@ -25,13 +25,66 @@ import json
 import os
 import datetime
 import uuid
+import webbrowser
+import urllib.request
+import urllib.error
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
 import monday_sync as ms
+from paths import BASE_DIR, FROZEN, ensure_first_run_files
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = BASE_DIR   # bundled read-only assets: index.html, management.html, favicon.svg, VERSION
 PORT = int(os.environ.get("PORT", 8765))
+
+GITHUB_REPO = "jakemulholland-code/board-watch"
+
+
+def get_version():
+    path = os.path.join(HERE, "VERSION")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError:
+        return "0.0.0-dev"
+
+
+def _version_tuple(v):
+    # "1.4.2" -> (1,4,2); tolerates a leading "v" and trailing junk like "-beta"
+    v = v.lstrip("vV").split("-")[0]
+    parts = []
+    for p in v.split("."):
+        try:
+            parts.append(int(p))
+        except ValueError:
+            parts.append(0)
+    return tuple(parts) + (0, 0, 0)
+
+
+def check_for_update():
+    """Ask GitHub for the latest release and compare it to our own VERSION
+    file. Only ever reads the public releases API — never downloads or runs
+    anything itself, so the actual update stays a deliberate, visible action
+    the user takes by clicking the link this returns."""
+    current = get_version()
+    req = urllib.request.Request(
+        f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
+        headers={"Accept": "application/vnd.github+json", "User-Agent": "board-watch-update-check"},
+    )
+    with urllib.request.urlopen(req, timeout=6) as resp:
+        release = json.loads(resp.read().decode("utf-8"))
+    latest = (release.get("tag_name") or "").strip()
+    assets = release.get("assets") or []
+    installer = next((a for a in assets if a.get("name", "").lower().endswith(".exe")), None)
+    newer = _version_tuple(latest) > _version_tuple(current)
+    return {
+        "current": current,
+        "latest": latest,
+        "newer": newer,
+        "release_url": release.get("html_url"),
+        "download_url": (installer or {}).get("browser_download_url"),
+        "notes": release.get("body") or "",
+    }
 
 
 def read_body(handler):
@@ -75,6 +128,15 @@ class Handler(BaseHTTPRequestHandler):
 
         if route == "/api/token-status":
             return self._send(200, {"has_token": bool(ms.get_token())})
+
+        if route == "/api/version":
+            return self._send(200, {"version": get_version()})
+
+        if route == "/api/check-update":
+            try:
+                return self._send(200, check_for_update())
+            except (urllib.error.URLError, OSError, json.JSONDecodeError, TimeoutError) as e:
+                return self._send(200, {"error": f"Could not check for updates: {e}"})
 
         if route == "/api/sync-progress":
             # Polled every ~700ms during a sync — if a transient read hiccup
@@ -242,6 +304,16 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print(f"Monday dashboard running at http://localhost:{PORT}")
+    ensure_first_run_files()
+    url = f"http://localhost:{PORT}"
+    print(f"Monday dashboard running at {url}  (v{get_version()})")
     print("Press Ctrl+C to stop.")
-    ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
+    if FROZEN:
+        # Running from source, start.bat/start.sh already open the browser
+        # themselves — only the packaged .exe needs to do it here.
+        import threading
+        threading.Timer(0.6, lambda: webbrowser.open(url)).start()
+    try:
+        ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
+    except KeyboardInterrupt:
+        pass

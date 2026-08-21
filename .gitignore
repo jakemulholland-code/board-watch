@@ -11,6 +11,12 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Packaging build output (produced by packaging/build.ps1) — not checked in,
+# rebuild from source or grab a release from GitHub Releases instead.
+/build/
+/dist/
+/dist_installer/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

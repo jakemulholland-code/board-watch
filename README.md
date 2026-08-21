@@ -52,11 +52,27 @@ board.)
 > Prefer the command line? `python monday_sync.py set-token <your_token>` saves it the
 > same way, or set `MONDAY_API_TOKEN` in your own environment and Board Watch will use it.
 
+### Packaged .exe (for teammates who don't want to run Python)
+Board Watch can also be built into a single Windows installer — no Python install required.
+Grab `BoardWatchSetup-<version>.exe` from the repo's
+[GitHub Releases](https://github.com/jakemulholland-code/board-watch/releases), run it (no
+admin rights needed — it installs per-user), and launch **Board Watch** from the Start Menu.
+It opens your browser to the dashboard automatically. A small **Update available** link
+appears in the dashboard's header whenever a newer release exists on GitHub — click it to
+download and run the new installer; it replaces the old version in place and keeps your
+config/token/boards.
+
+Building the installer yourself (maintainers): see [`packaging/`](packaging/).
+
 ### Where things are stored
 - **`.env`** — your API token (`MONDAY_API_TOKEN`), written with owner-only permissions. Never committed.
 - **`config.json`** — non-secret settings only (see below).
 - **`data/boards.json`** — tracked boards + column mappings.
 - **`data/tasks.json`** — synced tasks the dashboard reads.
+
+Running from source, these live next to the code, same as always. Running the packaged .exe,
+they live in `%LOCALAPPDATA%\Board Watch` instead — kept separate from the installed program
+files so installing a newer version never touches your token, boards, or synced data.
 
 ### Settings (`config.json`)
 - **`warning_days`** — how many days ahead counts as "due soon" (default 3).

@@ -19,6 +19,19 @@ dependencies.
   Reads `data/tasks.json` via the server and renders a filterable table, a task
   detail modal, and the "post an update" compose box. Paramount Digital brand
   styling (Fraunces + Sora fonts, teal/amber/red palette).
+- **`paths.py`** — resolves where files live, and is the reason the app can be
+  packaged into a onefile .exe at all. `BASE_DIR` (bundled read-only assets:
+  HTML, favicon, VERSION, the `.example.json` templates) is the repo root when
+  running from source, or PyInstaller's temp extraction dir when frozen.
+  `APP_DATA_DIR` (the user's own config/token/boards/tasks) is the repo root
+  when running from source (unchanged), or `%LOCALAPPDATA%\Board Watch` when
+  frozen — kept separate so reinstalling a newer .exe never touches it.
+  `monday_sync.py` and `server.py` both import from here instead of deriving
+  their own `HERE`.
+- **`packaging/`** — turns the app into `BoardWatchSetup-<version>.exe` (a
+  PyInstaller onefile build wrapped in an Inno Setup installer). See
+  `packaging/README.md`. These are build-time tools only (`pip install
+  pyinstaller`, Inno Setup) — they don't become runtime dependencies of the app.
 
 Data flow: `monday_sync.py` (pull) → `data/tasks.json` → `server.py` → browser.
 
@@ -75,6 +88,11 @@ document the shapes.
 - After backend field changes, the user must run "Refresh from Monday" once to
   rewrite `data/tasks.json` in the new shape.
 - Preserve the existing DOM class names in `index.html` — the JS depends on them.
+- The `/api/check-update` endpoint only ever reads GitHub's public releases API
+  and hands back a URL — it never downloads or runs anything itself. Keep it
+  that way; the actual update stays a deliberate click by the user.
+- Bump `VERSION` (plain `MAJOR.MINOR.PATCH`, no `v` prefix) before cutting a
+  release build — see `packaging/README.md`.
 
 ## Branch / test workflow
 

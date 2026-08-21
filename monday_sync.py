@@ -24,7 +24,9 @@ import datetime
 import urllib.request
 import urllib.error
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+from paths import APP_DATA_DIR
+
+HERE = APP_DATA_DIR
 DATA_DIR = os.path.join(HERE, "data")
 BOARDS_FILE = os.path.join(DATA_DIR, "boards.json")
 TASKS_FILE = os.path.join(DATA_DIR, "tasks.json")
